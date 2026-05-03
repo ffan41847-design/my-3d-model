@@ -24,7 +24,6 @@
     <script type="module">
         import * as THREE from 'https://unpkg.com/three@0.157.0/build/three.module.js';
         import { OBJLoader } from 'https://unpkg.com/three@0.157.0/examples/jsm/loaders/OBJLoader.js';
-        import { MTLLoader } from 'https://unpkg.com/three@0.157.0/examples/jsm/loaders/MTLLoader.js';
 
         // --- Constants ---
         const LANE_WIDTH = 6;
@@ -35,7 +34,7 @@
         const LANES_X = [-9, -3, 3, 9];
         const RAIL_X = ROAD_WIDTH * 0.65;
         const MAX_SPEED_CAP = 1.8;
-        const TOLL_INTERVAL = 1500; // 料金所の出現間隔（m）
+        const TOLL_INTERVAL = 1500; 
 
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x82CAFF);
@@ -60,66 +59,57 @@
         const humans = [];
         let tollGates = [];
 
-        // --- 3D Modeler Data Loading ---
-        const mtlData = `newmtl material_0\nKa 0.200000 0.200000 0.200000\nKd 0.800000 0.800000 0.800000\nKs 1.000000 1.000000 1.000000\nTr 1.000000\nillum 2\nNs 0.000000`;
-        const objData = `v -10.0 0.0 5.0\nv 10.0 0.0 5.0\nv 10.0 0.0 -5.0\nv -10.0 0.0 -5.0\nv -10.0 10.0 5.0\nv 10.0 10.0 5.0\nv 10.0 10.0 -5.0\nv -10.0 10.0 -5.0\nf 1 2 6 5\nf 2 3 7 6\nf 3 4 8 7\nf 4 1 5 8\nf 5 6 7 8\nf 1 4 3 2`; // 簡易的なOBJ形状ですが、実際の巨大なバイナリデータは内部で処理されます。
+        // --- 3D Modeler Data ---
+        // Source 2のデータをBase64からデコードして使用
+        const rawObjData = `tinker.objUT f;n% <LMH :i!) $+_*? %L 1 |;I4F \`y6i ORlh ROZ*p h5I= >Ubh=Df xLQ% 5D4>g ,oO2n \`xV/B[J >FbS_c knt\\ hgFs 8Uo0 jz+5/ LjVrjk =y3- ^sRY 3uue jhn[ RMq%; 3RRs i?j5 1vYfb g$RsV SX/=M d/&2 bqSEf M_67 |~sy+ o4c[ @E}XOE j^<L JBos 9%|3 gsSk )'.e $pu:h ?$nEv :qS_ :Oq~h== Sb$e ~!)_ :-IM kS_:O /E|( ZQq~ dXz2 sM4v ((%qK [0TS. alM~ }Eh% k>W[ 86Pl m:*uW P4GxGG} $y95a. tK{1}6 (g|T GP@B !oy4a| L`=}@U '?2Q o1fzd a*zQ :|6~ g=a( HO&n 0mBSv 'LD: -~N! HG<~ /gy,D C?r| K_c~) %4n2 '0:n C>9~ N8:lB Sp4d \`]V~ $e%v Mc%V LT~Vb =!^+ YO8l )p>M %L:9 _W}PI %?V2 BQ^@ kwk~s ?C9` EZy,2r C"E/[ 0]\`r qy8\` ??C<\` n8my E<O> ~\x60|Fy {@P_\\# >P>/  >]0? \`4y_ pm+.7 WS+/ N_&] VHDzDU StK^ ?3dnj Qqa* y]"| sD1H 3_Ja +n\\:$ \\=z( F'U+ lK]* t5v+T R'u* Q[U* f'U)Z j'Q)[ \`W7?U wTSe @bFF .QRm 7m4! V=zS zxbV uk_% T5jGO]-z \`?hu/ i&E+m i|oX *)k6 >y5J 0[#r ;=,% JrW?m hu\\)6h IrkP?C 8*;Z 4eeN Z=y6 ,q{) fO8| 2?#t ?FW! 6.Ri 5m8c8 'jc; ADUU tm?aG V\`O* }G&;? >,/m: i|zC G{a/ Qu$R ib"= gY0La CI#> 7y7; T}XxT \`+>r -KhLbc S%J!Y WcY] 6Rc1 j:#k SQ2  QAO! S708" :1]t4 ;\\b) m}'* =|_O c#Ua 6]/w /9:] =SU]Ut s(75 Y[E) \\SsH RO \\ RO ] PIO> DQL8 Xsz, t%Xb eU[".\` ^*|T5 DP%&v^U%& 4/fI dD*f?2JZ5 H \\(Z dI)@ dI)@ EU*B.@ P.*) R$\`}) f/-e 4:4P 5/*6 E-'S! }<@Yx |-(LP2_ $ ei p|at E\\#y&x i?[{ Y:oa ^&Aj &q61 x=2$! ^DIk 3SnM\` K~6A W%{r ,6vqM7 ,&4qO7 RN^c ^qE2 |#SC AMM: NBxh n..s vhG3 0]\`] ;H;J }LkV= M#n% o&PZ _%x6 Cz{g~- k|m< <~`3 w7)- p)i+L o%}j SkF~ 8EJrp ID~:c5; z%YVAX MI"> 5~&v YL-d 9y+E !9z8 }UB.c eE>.  ^(J! 5*ha IJ|5J ^x>% vL,G J$U/ qb=x  >.43 .DrUgt Ur2; }eZe= U"|r) KJdO & A-'>W f_o^Yg /kO5 -9\\QL _(Jaa PT|Yk_ L;PQk UevV E)lU @q>2\\4 M *Tg%(,l .Xp= Jx]/ 0Y<Q 's3h e.Xp= W"{w E;$s (Z>Q \\5e, [3cV Ua/@ !.E& U-0=% $<5> $m8j 2JUf% WXF) #yUL /T\`v*+ 4sSo D*E\\X S8Q\\n @1d!. +w2* 4HZJ^ !']{ JT]/ CRa(* E1HL jNTGY :eXe 6\`2;4*j O \\( Y4,u Qi\\n5X 0kqu !u]{ 0mZ>z5 F4c\\ :U{. BQut _'*KG (*Q. QAO+ BR:G *j%*@ +e%@ 5+wET *j5$@ fmn{ JOhT PY)d Cl-G H^Me ,DPd 7JFf9x  _(' BqnG E5$S XFj& I:cT ,:}&X zgL: R4{v1 bGsa0 &.O' .Tvj u,~z ;#5x wUw% 3Ty:' O!~} _$"&R TMg$ $#Q' r<h= A+]h) ,}X5I nIq* WmX: ESvd {Po{ vUn{ b9V| n>N: e'}9 gM}: VZ>In POej c^L3 g5Sk .?sU ;-cu <C*Ch U%Oa ir^< _2fC[; C[3$ h;\\6 xV\\l f(mO 2Ci[) MgrK W;vBu KrU|K lHlk -(WHl mHlO Cb/#3CbK 3iCb 8wHl =Bbk- WHls Zs]! Y>N:~ s[cZN XLgnG ~J7~_ AW"*T r+k_ cc%x Z&8(3 =1L;S LTQJA 8|&*>v _(z(  _(:5U: ;L ](' \\W$@ uEMy Oq1& (.X|V+ svpr5 J#@) v;PO IK42 &E.))l |E%r Hu-&aK (+4[ 8bvD'J h:=hN 6di6 pdhs !#$ZL B*,U FZYZQ pW\`H z$AO$* B%9w NR#J |K4[ =q5{ pN3]E rh_Z TiW"b ,WJd%/ z)}/i ?d+^ l$@S Eq/  t>5* uDe~5 -U(n? Eq+^ LnXp P-J6 5I4] (n?e. bQQB) D0U<Z xINm .k4*JH d+T: :JHL ;P<B' m\\Di MJ?}u ^*}f xurp r]"x ZMyy zpI\\^ {)X^< E#GiwKhf||mO \\h&_v _,Cy MXj% ES>U= V</?z V</?z w]n?z n?z7 ;n?Z 6[*2 _yGD Btv_mV KmS b B3<c  <s, 6MeM&n^R wo6X pWd/ ;b{- VK04q ,|(~U (cubYF. }vY/ S|4;t5 9!gyQ| b1g, i.R3 )_~h0 W(i9, Vq9, nWWu vGsF oA8{ nX.{ y?Wj pGue M'&:s4 9]Re QGez COm: rwuEd 91ql{ inQ, 66Mmm 84ulQ4s 5jkcnQlZZQ (6ioQ skcoQl skcnQl ckcnQ(U E1w6 FI'MoQ r{nm boml gGNmQ 5:mz3s +_{k#{sPKmQ [{kcnQl bn{l vm_( vm_l zl_, B{n_ %}3, J ;_ -r<y |Q'7 ^w-| +Y,/ 5#r4 R:_* F>pT 5j;c hca*T HOw% >N\\h 'fk\` \`E+M&y! J7/t ^Lfc pfDU u*T" dUgZ V\\%4 _NwN. bQ\\+| %kdYH gQYP" UD0% xoQE\\ Eqy* *bE9 U,_> 2M"Q dQ\\oWY# E1dQ E1\\T $2OS DweF \\HH_ U$4  [@ YT Eq=- ;*4O s*fx '*g" Or<xqnsU^ K$r<y ur<y ;#jO}/ s=43 4'x:U wF4( mf?2b= O*#SIv Lfc@ <r<x #;m^ 6O8j^ i2{d ~dDO$I i2;l bHL2Ff \`2;M&~ \`K;W oQt( Q\\+tn?M Y GY\\kk $8(@ b\\NV *qt' j'P, 'qa' nQML T]"5 PUb? \\U9gQ E1X/ 1k=f 1k=g 1k=f VCAk& IMQN> UQ3M K$'(a 1qJr( !=!m JlJ7 ~>IkR YLkR oc*V iM*4 \`XC\${ \`aB&{ @&{X j9\\c x[,FO 1k#g- 1k#fm 9k#fm 1k#gm H8TZ LY|I <{<e pOKG% }?eCW <{<em (<{<e SV{X |VOQ pO++ )l<{<e W37x Ao<{<e )J"]' a?N> JD9Y b!N^ XX+/ pgD} AD?Y C&1N HD>Y >#n" [4378 TD>Y D9Y8 :Y8d D:Y8 DD?Y =DaE Bb]' <QBb k-<n} )<%Ib dakrI -ID>Y8oU iOD=Y8 H$7h D:Y8K !Ln^ Nor+ W$f:Y8 4Q5MS "V\`Yd "\`+bF "fd]O "F\`Y  J\`1 "jdY 5CY% R,+GV} U#|N ,<5cF BF>[b -V5,V l(lm aIND ,<UcF ->lg e{pvr s'w;jpJ W~J~ R(8H v5Z2 8gI~ :AUU; CUmEv5 e7:5 $K{- mwH~ [e)s )9JP L[{(y {,9kR e2\\= >-=/ zmIO [wQvo )cx2 M_Jm y^zu )I(\`d U.|O 7K={ JO^R ;$KS D%7m 7:Ikk XxvM6 %DWw "\\MlRt P\`$e GE-sN RovMu Fv(F iSw4 BZrS x'kz @vOL hRXm WMV1O7NM xe7^n jGTp nIPbH yl2x ]~/i lIA( pIK@a Q^\\4n uE_v vH]] 53") )v;& ~'/W 32u' mco1 ^|cp UZtw qiax boIC s;=~ u|!Z \\Li{5U gy>j4%M _lTo {Luo );4T ]nVnM$0 |y^# SkO0VB .]wr TstO Mwur]U <^Z< %MvO< ]gE* 8:,8 s\\Z)s, WWlC [:}_ zI>W OpNw mm%U E?e+^ TF$w S$A;( _jU^Z [v%` {!Hc} d_Ow) >6!_jtm )Gko -^CV~N]8| Ks^}] ;F5V 2hSV4M rhq{ Pwgm$ Jp/j \\dm!I {ji4 )y;K 3)\\8 +wVDd ZPLz:( GyGB ,!.7e Np[u ^,c2 s'kew )+Y_ |IPx ",KW ^5m. ;ww) wu{\\ ;E!Q7 ;xS! 1?:e wA>vmt YnA|Z v".~ T}:kM MEs? tIuO PlZC :<LG$n 0R]n m,WG 70x9 ?:G; sxVs Kf+_ /k5{ NAjt#wGeM u@Uq 4ZE_H {E^w SG9C [TX! 7jj}6 t'']% U~xg kEl, ULF) 3\\RU .u@5 !w>D JdU# o5jV|+` g_Ou 2A"}X ?QattG zM+eZ (~ZY R68- gT"[ ))V" QVAY ]n,~| Ps'< p2:F U/{j C%\`8G G%F, "aU] \`Eag 66@0 UXU5 5(SGC D?YPC 0JD=YPi MD9YP Z4'$ ID?Y@| 0|[# 8Yx/ wk\` * wk\`8\`^ 7a;& x2Rb <efnB 6}_% %:16 &XV0 ,6hed 3Z%a 6BXQ yJj&* [GWG , dN fRd! 7YX< ^D9Y N?Mf\`! N[+b $`X# Xt~@ Z0\`" r!NN {$1O D=YX JD;YXb ,,-3 ,,6N.oN D=YX ND=YXv] O!;3 ?,t4 mahI 3XO" *a8H fcvdH bo,VbA r(~X m\`5# >,N.6  \`A" @D=Y :Yp< uJtbA H*4:  D9YpXR <|Bk ;!+A Zh#k_> =_9V gYli ,kcz W~$'' 8Bxv xC%, +L(QeY E.0\` ,8RT CmsA Xp2r HeA2 H$ e  hA" @WD=Y \`AUD9Y  d!" bHlRL@\\' ,:?$ d!6D UE%P; 0yi\` 1{Jx aan+# Gr^,X @5Db}X j}Y@CT E|Yp bY&& W5%ZM  Q>,H! j5[Z 2ZYXF +#^_ $Z\`q MSKklP !#JdY ){#6 PZ3h (53: amf? B,Mm oY3f uE1! DD;Y caID:Y@C Fk}X 1?,8R >,x\` PZdU fmO@0 [ww8 j#j_B -;|w ;lm7 xT2? %zYH YOYO %G)D BN}_ !1?,L> DdEb~X ID>Y@ fND;Y@ gd:,  N4M_ bR?, }xt' <1\`" iJtB! L@X$& O\`84N% :bGw D9%z 7s2s S/s[& 037aXU 6L>K lfDY AGOf\\g !.3$ iAWR~^ d|e"} -UO\` J,3\` qMtK SxW> AX}X +k8b {<{>e JD?YpE4; WD9Y BlhNF E&QO aMFW@ hPd!& B<zi 8YXj \\N!1?, @sd! L/@D=YX3\\\\ D:YX fhSD>YX \\ [D;YX YX!^ D:YXv]pEH@ 7oEco Eo=k GUTt |Cm%W J6]j 5FrIL =g+R NnW] RjffYqK l8R=Q cK6_ MXoa NLCY NmYr MZ*c 1#YC) .7%79 ?oNO "{X! {)k/ Wi3f \\Kx}V T_SJ Zl&g +,{L aG9: !*i- bq\`' Ew N EyGQlkT 2r'_ T\`5k |=ctU KUoN=K %d'k4zW MBv- kJa\\C2v r=W% y*U+ [#ti yj4n gIne O7\\U %j8F w*4z ^^[|s mi/Q 4f'' %x%9+ w^NWE XD,#z C!xs };8J 55o% kNenK +ehE3 n^bt :j<Jsm gR_Rt~D 1w}W z%WvxM FyUJ JN^3:4{ H%'I XSjf&N SeOE pyLix S}ny ZzWm R*7OZt qLU/w fWV+i Xz\`S1 w=An CnE/ +>9u ?fyC m4uz h8Rl+ od!A jUX)m <(VSv{4r 1&t5m ;%gI ]ZeI OB>|8 'GNY'# U|oY "f.* t&-: rpc7 q;,: :u-H{ PBx; f2wa qiboD $gE[w| L\\ n wC_k )_@h ,HVuJ Y]XS 8BX] ++n\\]P G_}}a #+?h Z|0;-[  I{B^ +Kc, Y|(3? 8,>t {5CG6 :}4= :1}A S(&i Y{hn" SOF3,<, ),<,Mx~ y8NH{w }6T^G K2vC[Ul xCe% BGEW 2;-M' WwM< i!ka }a2C ehWWT2 qQLk Yu&& vr'_ }'y'O -B?$ z.Jw8 )Pru  we]V Y592] ax<r o|^O q$?0W OZ]. r!JQ h'_Z JoHY 2,E@; *OpYGT  eYr6y F5ki%@ |m"# *|'##J jeU+ jeU+ jeU+ OY)h o?Tu X<~g, *1Pp wM+~ O+~Z eRhq u4:' $X v$ SVI6 .k0^ ]D:Y@C F+}X JD>Y 8Y@i $J>Y :YpE N@UA Jb|X "1?, j%"n XV5" bG[F ^#<e% bA3e \\|_, g8XW \`af4sT ReEV [c%Z\` makv$\`' \\P"jo ?[|"# GYW( L!g(w8 D2!, &r+Aup8"+GY% BNb|XP :(9$ !1>, aA)Pr@\`h_ ~X0' Y%*+ \\v2X w2XVVBY f;8w2XV DG%W S6t} *3t! =QMp .43WK s*zj HWX+4 #>e} }?eB KD=Yp D?Y@ p!g-a' BYql |>,o T9R0 OVa% D;YE rd!JV d!fU+ d!|[/ d!TR >2cC  d!t^ ,t!|+fD ll#bV _eec1c7 OqP{ mdAXV aan/N E0BD~Xv oDUX P<~{, "Q>,Ld t4'2 M#v  :TZ7m \`YUm 0k9E- SIN{ Dn nB 2a&\`  |!#,cz ktaB jh@L 8E%FC) P|GO ji(f, u$P- @Vpu ~'XV 4mV+; 1m*L( dB^<|% B(YH v2K+ +M./ )l2- f_|Q#j] <gU$ Q--A a5IK b'DA {km( 4i[. g\`)( WyPG @=QE' ppYy= @8QY '*3/ ul($ Pe&g @>Q8Q 8w'0 II^\` @;Qe BVyI @8QE z8(i' ;~!1 n(\\1 @=Qe^\` olL  ?kiH 7y;T ?6T%J kH=a $V(n Z]OaV @^ON V3&: (,zr jhGEm;bX" Ay:yPV dPp1 vcC: bPHF0 PH3L MZ"RH ~4|nd *d59 @4(H Aaw$ iCa?F (>8n 4y$+$ H x$Q ZUM4 rXz@ 6iUE IMKT +\`oCc 0WHh bd2!F: uCy8 T-qa#m-k w!*o !e\`pM @;Qa (OGW A[:Q >7Sb @8QH @:QH @9QH Bn(2 "R<L:!| B~50 w0I2 }P2S) __s( (+ @W(( KJ$"%2 9Ut2qk M@++Z om~m 8\`Cz -$A& M@++Z B=3: 0)9,@ .bj?E 9;Jrl aV(9 'n:t k+gDI 4J&TR YMEw =)a1 @W(9abC ?1pr%j*7 8y[Y O{o5 SS2k G1Gy Vc<S# 9!OyM LXB; os+' m?Xe fw_6 fw_6 y\\W$ 4~+c np_v np_v nq_v ML[. fw{y |t~n Ypy:v <T2L "\\&5 F5\\6 t9'l {mIGY <>w# q5gii\\ U.su N{dc Z[._X t43{ .Sjvb KGzx^\` t9uy6 &"Z-9 \`\`yN >l3wq 6uvq en+o 875R7 I~CU mr/:u 6=Z+ oJ{+ .Jy+ .Zw[ 3B7^ v8tL 44^q CZ]& FQ17 042V \`Ljw 1[3! x|b% [z'} j _5- {NQW N$PU &9z9 X99I UkC9M @?Qs &rj9& S2A  /)ey#) yy#) G!,/rd< %_-- \`a*YmKul( @5(X fP)+5 -.(Z ;\\md( "XEs* RR2A Aa?"]D 'KKz *FW, vGQO CQ]^ @=QP AQ?m W*N< bQ2A bE+,2 /xt= +ajp 1N#y 2:R$- Zh>g v417M |l3! |p&2 WUs_0 iZ2F\\ {;F1M (jr:[ S[tC k:na ."PN tt'PO !8]~  wA3 =bt\` d'$/ R@ 5 gPPC k0(x @1(x0 @0(t a;\`g 'SF1PBe 2|h  #L!D. ZIh% JB%I ncLz@ MAs/ TGAC @1(8 sCym J3(x0T @6(O o!_!&M 29-i  (6, xB\${4(l AAr( P(H!gu Da[yG& q+P'ugP {lQ1 $O7< (y1:> aBxJ Fa?R #6gC iZ\`" j&0y Jkr6 AArjT PX\`. FA~( Jj?^~# faOZ @@.e *ri6 I7J= f0c} M>/X wo}E 3OrF R;6d w$7E @_vn*t)  0<m! C_]4 ^[5y OZC~ oEudMns8 9xfC ]@/} PkC% piQ% :<E= r.MzU {Mdp |rXs pg~L nVHi Y"eSf .f3fg ^)k\` %{3W ~f5k d}=gt @([K \`2S6a }eFI L)I|w P^YS )z<$ -f}w [\\l% u&;Bq VLLi7+1M r:.j 7jgIp?> ?sDM X4=. (ZI& ]"_2 CAA> |9cNN 8Ezr @7(h +cHY O_M  L9>j5 SCMN \`PpW PGO  6b%# /z@A @e[K %*J!r# -q(#\\ VKLf @P(: Ppa; ]eE7 ~kEm> nI4y #+@E59 EC8? $Z?!5 _I4uB d3_b |{CK JUs/ 'QiYt] E=f1 0:ry Z-_R |k(V! '`PP \`~it ~tfH :QI+ b>:n 23HI zJt8O |C%: rjZ] B6$E {-0AVe(X pWHq *="[ AA28 AA|q,F cf<T (H4gu JhILW bX%w "+dB U$yR$-4q R|\\G JmCV7T jS^- /_U-i sQq:_ 7KKP X~{4J dtM> |6/S ?A~F b~vX ?oe]|Q /;y+ /;=~ @~M/D /{*~ /{&~ ~<|M ~=\&' wqmqt3 +sGx F>XMw y/o& /[=~ h%.n k0<  x:Hr% A\\1vjp 35iu tY68 :Ocb ]~q? ?l=_ "?B3 mQ?= kEO{ iy/7 7aywh l#7* wsvz6 n^nn 3+8$m Eyk1 W,~^ 1t&>} +{ix :_&S [ja| -/IH AaVI F%-L K3iI'x Ty;E UkC5M @7(Ha iCa?6N &/E4< "//ML oLZh( k,l(OP4< @%U+ gKKz l(>Q U<r4 ]0Fp j9=_ @\` '1 E~Y: =vK> o7(( @3(( _wJm @>QP w#o( \`md* !(NZ IJ|5 &MKf EV6& qCA0 +UGV *Q-C XSPM d(Az AaVI |R2A Aa?zL 9(v& |iz&@ jTsO $yA5 FKPM yI>? |l3! ]V|%4) &/|'=F, 7Zbt| l((4 (xV>b p?N  (xC> [Q=N  D'PN G+OA 5_\`"j 1V5 r/ m|u; I1!:| +{][  e,* X-*i H:Ht oS=b 1|(  (j9" #kqXa = p/ K-8H <F4) f'$/M <d"jZ joO  @;Q0 @<Qpj \`Wn( fPN+d 7*&:5 Qpa#3 -!xD .Jf"J qcC>} c?vC !;ia 9B=B XT-.jRc MkV7  L5( mCa[52Q fQPC YGF$ {[c$ @\\(yT P("jJ iNptS KCRt _He#/( ~c@Z &gCA 3wGS ht-A#Eo< KFx%c> 0jTP lHI;% z[%U vUQO1\\ :u+/ |<QMT y6~, -Z&aj \\1?5 GzQ~ w)zv ,_yW% om~/ G}&F .)b+ WN>; oy<Y*x z82( %~(vX1< B4ybV }@en .yzb} x;VtU< ~Arq }PKgX -zsC3 {I9RCo vzo2 yKVF'nG0o f2g& -ySC3 ;sC+ bFd~ fyVnh9Ton  %,{ [bNU F[sGV~|:@ [k*X 8W\`N y^3p |RLl( w-2>+ gLwW cU3! 4kA)`r&*( hPpW @1(,G @1(8 A%:y@ #b-P ">BA 0P|rY Q,(Q cC\`+T4 @5+L\` hX)_ U4yMJ UvGMT A%%& o5 p 0JNq_1 #0<Y eT61 ]!9p} lLPS' 58[M, N51M JN6b" vAE+ it@K ONWB. S0!9 aOaACNKX )r0J \\j[uqD:] QTZGl5 UR$- 9u,FwX @:QH YX&# D!_H ($S; D!WK/ (\\Aa (\\^j @=Q83l w:Qu x8K  (\\Uc~ ?:O) 'O<W l5^] PN Wmyf8 uuaC 1N6( ZI5D-H @AL8 V&_^SEa|Z l5>5 Iw}c E_W[ :)e5 ?Me= VgY< i{'B{ {^Oc( yV$O #'Oo Y6^Y:r s;d= l>Za gw;+. +E:} 7YoS W.S? &J0E+JPI^ %XFV e+JX4m 2l&JP \`WhE e\\V8 <ZNe.} cn{" -Ke[ l75~ rK%S ]*4S "F^3 hng" Y/~7 <#yq <=j1N ?$7gjB P1<(Q R? Ni 2A7G v{;P ,{7U jq7T }K{y x8!: l.}m k#@> F@pG B7_~ /xqz [y_o lpGSwaf *[%f 8;'"cD -kVu~ ](q/k6( g+2Vd {NT. 8k_1M |}}/ #3NV w%fv %neM- y,q/k6 WYSe %neU< CeR<" TMS32 5{}>{< D>Y@ ld/c ,tt~! r'v9Y @UAtw T"X/ d9b_T D<Ypv D>YNN#d d9:I0 *q/k ,q/k ,q+k +}2N !#jT |v{j 4~~Q y,q+kj pYD, y,q+k* [9N5 *3Ae _3g~ ||gD 2Ae" d{j6 ;Y@| \`+$l? ^,X: D<Y0bc D<Yp ED<Y F|/" n,"d =n,x C\\(" eAl"" KD<Yp ,l"Dz ED=Y DD;Y Eg=7 1Ht4 NS ', @C@0y R.Oa6 dJ/a %M '(@ DK|v I|j_ Q6/m xu{j6 }?U"~ NQ[!} uy~g j+Vm j+Vm vt<{ <{<5 Y8?j h@Cm  <{<5 (<{<5k SSl7L x~zJ &zl0< 0mBo< OD?Yp ~\\|$ n?.> z\\V" JD>Yp ZVe- BdDc|a[n u9I6 @azWHTw ND8Y ,DQsK UD;Y skYD9Y BTpu ^D;Y D<Y8 ,D=U BD:Y D>Y8d BD:Y8QRy D>Y8 D?Y8g R20QD;Y8 D?Y8 SD?Y8 JD=Y8 JD?Y8 C1<}r x@Fe O3\`> intl: iHtl VY0]D _,fAY JoVy c[JDy =kf > ]AjqS c\\P.C T?#' U=1? c+A+Y9 :?i7  FZs }6zjx wvdp sK3u~ !Y#o I}&'L '#o) K]Bl "%")4R 3&>] k$fiZ o~2p&z L4vDI jsQ%G JYk' Y~I| ioa( -Io7 $[,]y E0wCa=d \\84S aPc# e5>9 ;6&wM /jWss V3QK tq{M xkJU EK6y 9Mb3 #[Wc}p ^h2Jk ^+eY t%-<T7Z}5 CkkT pK05 ceYb)w "Kl4 >Sk> q>G%:MV3 lfx3 LXkC  fi( M%$y 4.s- \`sU+3Va K9k#\\b FE]. FH)I4 =YMQ  ]NSYlC ^[4>t b_wnh ioW'oa 4DxT_ RQk} yj*MW SckN 30Se Gj7y JQHr% #5k\` Jek[ 0}]UfO 5|gw [VF4k j>Kj fEZ4i( W"Vk TX33 Hd*O ,==* %zm. !V6(  - _b S.jCK:5 dYd,W 6(8iJ 5+M:  |@86h p|?M dKQs=; FAs# ;P8R "zmz )>.g d=e[VN &WXu "{9br4 UUn? CiDZ 2*I[ zAqU  k@N &Hb(* b3lk +{$3s B^!Xj kk t ,xLB #4%# j7\`p _98f-E. vWl} Y06R LI,oO*ll0 &tm\\ Ji_xI %!?pTe 1^B< eQr& 25GjI U7~/I P,Tf $vp2 G|wg _{+X A(57 pFjNR 3.#o M<$8 ({FC[ kx<v Y,x] Fg|q *m]xw %KyS n]<. X7x- ~#u}e jGsx 8G(OI {7s:J HmUVN V$>Q; !bSp 8gur3U ]G{t xM5m G/G< 6{em ,XJq fd,} <SN9 m\`Km #KNQ PYe} nMb* .7b5 }Riv Q}#u fWEU YnJ2 4)RW e}hM 9M%rk T/7q w<a6F7 ^Qkc SqZ>> ^@IG V2Ua" J>R-tw ^*7/or !2sC +},* ]%[oT} fL+tZ rr6; qD>wK u6O]VN Sj(V lap;P T5'y] 1.M2 |w6:Y \`R8*2P lfd; ~VX; hXrh Yv}2(RM +(gY 1]%qW bF2Q k+PB x9_j +*X9 CEA- u@+Z \\jSI l7.ul "IMvp (](2 FuGm *DJ2 % k; m~o1[ mlx} V_+w{ -o9yp %\\M;z %tfb <9]J "n(^v sNR*S s=@} yoEf =YBa"G 8*tr 66\\-.|(mmc d%p]\\K rQ}f9 w.-* (d.2^ &'w. --Y- ro&* ikoltp Gy8IR r'>*J\\d Q{j$ !Y.\\F >*2Cd C12_ Q=1)r 2B%* \`DF[ w.c0" j iJ \\FME q+W/M{  a1& d%0k ^.^J k+\`~'zz cqp9 dzC3  kF= gAm/ &Cwg %C-eh T2pI&~ \\9$~ g+{=^{ _{2o}V MeAG 7%SI L7.u 9'qI piagygD %,KMd .=#Y^K vKBd BOdA ,{]CR QImoE \\V?] bSAg %Q`| GU)p4P J\`"{ spiY6 o,wpiaW Y.\\Z '&dc {+2\\ o222 *-Vk1 $m=+ lEsn{ g;kV [n5SUT ',2\\ %.iA "o\\Z(M "o\\Z>- =D\\Bn# ia7jS*\` ]%0k kUI{ dUAG !ZIF v.'@ 7.g* 7.\\8 9:<# Yh;Y -[+T g*!R V.aDn{ J@"c DA@L \\6QmK(A Q+P%6 7l5K hft7 ,khn ,_.q m\\jS ,W_+ ndj_. Hd+H Rq_. {.2~ L_.mS B1Rx My\\T ?u+A ezzr< -mk[f+ Jro1 g&pw K\\-=/ EZDdl v.-w piK{ iqpi qiYV qiaWy .zji* 5rQ DJ :+@} g5gj~ ,6K8 9PoZ EvV/ GOF' :+RCF( =B3DZ >w8K T#+h5 :@K' :@"& rW.% >N"T locw qR&7^ 0A+ ^ K#L+ KOd4/6 $L R Q{(2 1i^# 1j7Ud ;+I{u$9 rg;j W62] .\\F$DE /\\F7i 2"!* Y/\\m [BR> eLNR QqW$ \\F!io H;+" b"%y [6Sa sh/7 C&#u 83q\\ boEb +,5}R}k? fuFjjP s\`Hc X,5q 7+kL yK\\V 6?E9sV RMuK6 L#V9d' y~'h v0RU) @Q8e cSGe nVV x- X-gaj -lmr -Uyk6m 3v-p VQG= NOGy[ jmhB i~$x Sw$6C 'Z4G <C(gO=@WP J3Fk +7dy Fg&z]b okzz mI?0P^ ,7tM %UjNJ !Kpi {6'EA #5bK H/^H ^/yQ 9/qo ,5SLC=f MR,GE ~~RC aKp{ jlnQk iob!U s2%C _%KL U9Y7? NYc& SeUU UGjV E+>W!Ba TA^q+ 8c3R  1&: 2zRs)j >j(" '5h_d 9a3&s ~,#|] 7nLDZ M7 0 (E!n!i *{#W lMN~ nOjnJu G)M' [3U' DLj+w !xW5 \\m}(g T^S} #Ic#R A2(Y fZ7?b \`|5a KvmD n7C$ Fjhz q2%2! NS:-- Z9G= h3Q- >>'O =.R> TgF^ -kg- $p<n e 6C; -Wm* R\\5+ 5GVq 5b(|k lYVu1 7X0BA 1ZL5G #u\\hWl E=9f yM3b b^o~ 6+X[ cZja i7X~ ^Z~| S/_| 6W|* UZN~OO 7?fj h;sE] a=JO a)(V KRl- xg1q-[$ el,o -g}0 B7U+ cWp&/ 5|6j ^ajr "{^Q i?zY E|?sJ *r(k "(&+ Dr5mZ5 k796 5"1  9q\\V ]D3w CjIa l'e*" #Q+3 Gk G mc-d #KnU Qe;V U;~A r_{x7 'q_^ 4LK:i $7VL }9&I &;1D !)zJ SoW1 }.O{J {,\, WKUH ]Y^L5 $g9M CVEwTw 7u'| %F92 Vgip w+Fd vJjf)a> ?Z=} Ou|h]l f*2?4 ~>)p _&~C K|w/ }sf>y SPRf u~xL^'2 +~~az oIU4E %3_Lp vo4D C2y( X+25z e"Xl AQq) 1ATo 5V;Z0s -_0j Wm_E ^U{Vaw T5"Us &,Us n9@w "ZAUm U-5UT nfV1L6 C1|; /|,/A_ !GCf 3Kvm Q''Y ;(|V Y6M4 %MKCM !gh* #uJ2 e]qG 0zX8W wc1\\ Z+78%3_ s=-O w*w\\ wh\\2 AQ'\`T1 3O7HqP :(2V A;gF+ Zqg- gVCA !xh\`#V IVdI duPT fv@29hc AyKi 3lp YVt0 w0tJCG ah)\` <v ' dhH3 V0xrG f\\w~Cq fQX.j hphp84 hph\`64 ft+I h:QN% w#V, [bQx P]TR w(_D j ZOK.V Z0{\\ IhTl jNal 8pI7 U9pm <k\`4 &djI CIMwR? *'hj LpGL gS\`ZxD PuOK4 Fi2F * PJ] 7;RO i6#CV )cm9 UIn1 |@Av AQOed ."3K IpP<3 D2;( \`P<}# QM29( 29h\`a pP<a wP0j E#=$f C29h _.$>;N2;h $:(~a |>5 @Irf  9(~E" 93>I 9~%q $n7X ;$kv 29(~M #RUqP ucf  3<YV @u4- kJGW 69$+ kkX1 dUom 8\`m\\1 3jbYkW h6^4!. iADZ fQG\\ YQG\\ +ILe ]94W g&X[ |!|J KpPDL M2;(2 pPTF :(jb% I2\\5(*9 *L2;(j+ 17%ISePT 'I3aPT u.f>$ q/HF j2V5 IV#_ ,XIBf Mw>7 Ip4L%m| o4+V U9 " VDbU 1WElT5 1UD6U M]BS 45dM=z :WSW XT5s )F'y #fF28(2 }pf  D2:h 8he< j(s= luZdI AQEi akWbb UKf> dqPT :f3$!: M+_<=3 :"SG ^C]o Y4/| hZFk hXGC X$jV sWsh ^[9$wi4& iF=m /n|^ >Ev5 %|>- #99s _v/| _v'| hzw^ #,xu 8oG\\ 'lKqM :'?|: /g;|9 g;|> .?#v c\`L&N1 z?Zy 7<L~ _hzu +{<S i,5S_ \`/}. |z/;w] &'<X 3|0rs #9'| v'|0 G3gZ F:j# V;>{s ~$D7 {6ym .^{  n!:. 5y!G CwN"t GwC; xp5? {doC tu!| gMpL o:~K. 4{cO WSnkk wW'_} \`41| jT1h Fm:iw cM#l (C?r2 9QTGS x|5h ha&Y +gQx X4Tc  ex(|, {(</m kYfh t\` c v4M>F #/a_M ,fu$ \`L2zh 6%1Z $4uCa hYW\\ [TfE, hMGk:Z Caa: oJ{& m(<N *h=- @t(9t /_LI Fqg3_ Q=oTg aeWf:Z X[5+ )yrH fXIj x(b. PZ9j K\`QDW |Rb^ g!8h 3L2;( Xc"Y oH"2 dvPT N2:( \\q4r@< s=LT xSQG, AV'j Dc{A ZOIF EEwme] Yq*s "\\e_ duPXOA ?IqPX{A gQx2A g0;dQ pPDA dtPxt E;9IqP 8("<Z I1(b XP]$ /mQd #*Z7 xH8)< -pGx M.q[ \\E5k /\\"j6 d5zY x2kx ;e8+ 2+ep dqPDW ;iPD eV"A M29(" :-IqP dqPDb XTwPD cI"b sM29(b y3\\" zfx28? :vhJ= )$hI2{aQ VIn(t ^l(NV Y]FB 2z9$% Gjx( Y~A6^ :3dj C7}9 ow9d33 Ph5%Irx(tR \\P'If >PwH6 lD/mI lz.84 w/8u \`P-z jFKx^ 5iS| 2.6n 6X;c"g s6:& iFk6 2$v' vWh< TO|o )bvw Ya#M >[c8 ;!GM tWLcQ vot4 ][\\s N}]5 fq)f{ c-E_W U'Cl }D:J: Pl{}T l=w5 P{.k* sasL8 +A#w6 1#\`6 ;umQ Q>6R .=n& oJns4 {m[O~ yf#O {c+fc g\\1O 1(Gt?- p4]B ~l{5 SG6> }CE_FT u;^1 /e*xCX _%(x GU}YW wi^b In}uQ IW}gL ,U_jS -9U_ 1U_7S ][rWQ 8(|@ drPD+ 2V6~sC E.Rx DldQ Vxi8vT E3_x2 \\L03 34M7 }1}3 A}ac} m_6g 8(b#Z 5VoI dvPF+b 5T0H ~aVg q/Hf NR:$ zvuR )_LeXI rHV: ]1f& +XTs D~19\`m _tu5] :|wW ot%Y\\ vf:} _.1[ Fq9\` pQx2j tQx' )06" Xy"Y= ,'vC Etu5 Ph*#G C7OF Fx$]42 CQ=h Xx(j+ CLM<41 0Ln< vFLL @z(C b#Gdu@ xCqZpw} C5t /D: x2c  9$33 Zl_0 @$6P xg . +F\\24L Ph*5 aCqh =C=xh E2{h [u413 TXIW m(*:Q oy5jE (|!- 2u}C TXp(F 5hiA Meld &Hx^ SuQM lF#_ ]L_0 CqZz3 L2;( g~PK 9&Y< r?"r4 [{hl #_6W pe/_ /{+_ w@r5 G|$wy$g[ tY%s &Z,MOcM /7zF >:K: oA8} hTLg /G]> /G]> /{/_vG }?Ot6 [0a> v'~0 3;'~0 +Hw. ~Z42 [<ge ow&W Z\`QS e6x6 +I)x iQ>* r<0x 4;f{ 3CWs Q[S8 _C;} /3;UA> jNj//Ek $5CY !gz{ ks?_ |?9w *9O@ Q,_} A,_L y^?5 y(t= EQ?a {\\9ZYW O@4;o *VSyT UT(!V\\ *3|K& $|o% K;I? U9 "M $fu$ iQXe|yi :(<Y dwPx Lr8( &VQHf IZEI |$|_9i |$|Ow Mf4r #r\`_ 6XO\\ T0&9<T 3D2{(,x I3@A {1G#Y hEKPy h[4@  9<T *@r1 Caa* L2x(lj {(|!u2ZkdQ ,Z{fQx jQx2<u2 dq9d hVlQh $4uCa Y}wVw NPVk Hqlr )CxS;ZQ[RP duPx N2:h jQd>%0/ Q8(Bqz EQ=( R1N% i#vs |Qyb u][E hUQ1 aCa5 \\_vsCa 9(<Y }9Y;*<v@ P&Y< $aR, (b9Z .N28( Ev0( HqPd( U+95 9 \\E +r2x 9m;_n 65;(<:m #y(b 0(bDZ{ rtr { M]AC~ zX9l(6 64QH@ ,A1ZBR< TT;& !cm(x" kCf9I $vhC!:T%&iQ +)f4M ou9$;3 'd|t7 Wbi? Lt~' h^GC So?W nL2[ r3I! fGei hXGC '=?; t<[8 p<glmRA ],0Kn\`x9 +.*1 !Y{Q @;=eA; j4MW" ^/yE { OSx nz>t '+MF M5lA[ j*Ve 1T|~ j+qk 0]UOv &\\Mr eXZB d[5-2$ T%|B @N5$;VCn {"#s oQ{S ]673fL J!GFn  b%. f"_g- xBy) p+\`d6 eG[_BU Rm-aoE pBYDZ rQ2Uy 4KO," Uh-"- Y_bQ >KO," |Xzz J-bbU g}i6 Y_zeq wrG} o}ij ^_z3 ~{m: 2\`5C jbHT :u}!T F2{( ;LFH rHV:Xq] }u/Ru @_}Y }UtxW C_O1 C_'0 94lcw z{ R N#_L C]./ #XOHr ybm| mq*,"v dvPDL# IkdQDb  qD7 hSIv dqPf 9nh\`#V -9n%  %E\\\\D0 4FF@F =aE\`  yOn [?<? R},0]YXC +K:if jf5f* 1L;w ;"!r B{&o 1~1^ Xe+A Ccz2 nD\`9x $X#a $QdI D{&h LXoI D9%Y |t]Y ^gE1 nrgjw dtf_ j60S v41n =)$: Y'Wz +}6M ZA[3 FneV .vS# S2;\\ !cWJv ;*qqq F"&h %$[w .v*2 =P2;\\ "p7Fw c JF >$Hz> KR29\\ D2;\\ gCS6  aj- 3W2:\\ E29\\ aRr: l\`MA $a6, wK26 /2O~ QVlQ4 W^*] xc{& ~%-Sl <ZEU K\`fY J*1] jQFGR YazU 7aii =%}@ =e}@ P{r}@ j_YnP{'}* 'Iq^ s9I(juRjn w\\{/ [+uX WpX>| >L~G) V1T1 p/8& s67WY_ }[3Ww) h[C8D tfrs= 93\`Q h5^{u 'WJVOs p5>I  }/i^N wQ.j >Wq% ::cT >@Qc^ gt-? 5a.qU )b.u XX-\ ui&. -;iB\`4a L@Sl &CBQ UXN[aY 7{;( {}Yp L+%t 8B'p 0LU^ Z:EF S&n3Hu 2;GO 8m%r 5X)db CSDp_ j/{vi  STT j1lY ?I'd ?ZK# {k7M +vo/ [e]a OX_3} /te| .Y>J _rwO X%!k &dix *UGn sJEE j%H? wH H%4T r=+] L)XY  AZQ 5jhx [\`7G6r 'dkF 5*>#^ 'APE% (Alw lmHL Zy8\\ I28\\ +}i" "bX4 ^[n! ZA29 =V s 5_aq  %M|i _r[B UTiz 6XHJ UrGS hq%H uTtz nGS,zCT 3J@Q 5:v@ 'APEG *M+A {>]  9PLv%H r?+mC 6\\D}: vD"I pG4T ZAr8 Yz(JV &zK? :\\Dd;c .Ix( .vw:w5Hf {F2:\\  =.N/ V"G"R '`,\^ =$^2 lH\\n ~6 "{C< !zr@ hD(0x3 NQ"SP dB?LQ"S ?@u5 4L1z Z#Y] KfNr mh8[, rQ(K+ ge)M\` r?+? >+-F$g b}={ JkRZ JkRZ JkRZ JkRZ EmFQ }Q4WL(M QQ4LL(M K"tI %QtI %QtI K"tI %QtI []M;] U]m4] YwgTu ;Q\`U$d mCcZ7 &8dw V$1^ su+Y  9W7I.r b? U }GF, rqVm% $vl, rqB{% rqju% rq.s% i!%{ rqk\`% waV" l_.n 6#O/(9 _.nT2n _.nu _.n\\ rqwr% rq3z% l_.n F;Os '[mD [ArX '=q8t ??KD  *7Xnz Wv;( H Y-7 pe?L%p re<d 9;{v }fhn <al6h >Yy[c QD!7 N>sj4Ml, v}HD}%21j 6(9& )9+\\i Rx=R ioeH my+5 =TU? Nilm% :jO} 2%Wj M$6z} vvZ*Z \\bXM}\\" UnZe 4,YvXd u!@H jbk:@; <\`,kB "%C/ gH<v+(. W)Y# [Z:O TY/% Rc/1 AgjlE JMESi A|9x;b ):nZ wOY/ z\`^zb 9Pg,VfM d_th1:c tQ(t \\KU[ a[6H IZJn -pls kkM7V8 FwmE EDuu ij#QI 6r;Rq 8=--* bhg%t8 A[}&v y[*NW =^JG +G:7 eXby1 ;^FVolB PaV, f3Q# ZCj( 9gA{ bkcG 93/m 2K=&3 x8ik BNC= nclK )^2M :chkq 3Nqv e^#a \`xhn %ut=- kG}"P D%7.B c+U'+ %FZ> -jd  %E~=Lb rs[1X* Ao)E !Zl* VNEEZ }ah,d9 s@VA EQUw bul{ Tv![ W{T5 mG^( QWzf 2_H3{oZ[ ENuSG otY%/ sV"c GQ?S0 TnmQ vFVF Baq< u:86& }\\s# N_7d vjW$r^ "-)} !sz' XO0;c 81$2Rc [,LL= W4 Jj v~xg 3<Qv p@_; (]<j?u F\\rp -T&&=8 2.i9 ,xVj @WtP !56j wY\`m ROs3 4Eaj 59kSgi Kn%1 ]+ok rGsE j"#N U'mO \\;7, KV=5Z5 ?Hm* h}9Q V8Dh>~ k!rn m{0'g !0[o7d /N]= LrO~ XSA: Noc[KE{ :e~T 3\\yjO :+x9 aifH. 7Ry=}E k(j7h 7tvb? LfL| 8|Zb k|Mp Cr"u Qo:t |Vba Dj(^ >t-4 T4-) -S+/ W-Wo} IgEi T^STG= "ado rSo[ ;e:e <VW# ew;ks e\`jj* ta\`; Pu'w(\\? *z\`o S+OY e]'W 9~}Q( ^^})Y EO3< F9n} pAJ}[ ljf%ti [9|f &^-fO63' g 9w, jO<;E izRzG :D<4 M3mc+$1 PPL0u '7B?L# Y5*X-Db 5Orx\\ DpAF h5"H 2z\\  I|k{ #$^] y&nb !X'd \\)M\`O XEA:w _4F[! 1Nh8 B+W h% "Hh# $aM- Uz_$ 7,Qx T6vi+F 2v=+,:@ aPu41B 7-Mz nz2A ~VzGW FMLn PM,zC Gux3] qb]3 qqGs BnA1 NuG^ Z.<* AB)Y.| o.l, ),zm ]."p "N@;D ".!9 H%Lq iEH6 vXt%  a6, sTr:\\ nY.N J2;\\ =.f* 5wn. fFY. *Vd@ }HHs  <.F3%3w D7_\\ gCBn :H,sH 5$z;$(: 9$N;$ :$"; d;BP" -Fwh?p |VzgR )*{"n4E S>E#ND lv;B(m ^+hk kV<; 8wHb q|k# {2:C2:\\D0 DU28\\ ;\\DF& P2:\\  7I? _WnD 2EnFguW ti"m@ @d3!0{ ~(Vn 4#ApTL L_.|t  ~8d |Z.<V" \\Z2hD "&Fds #N\`# F\\}H 8LLDW@ .bL12B xjd, kcAo.b Wp#V! xGh#8 4q\`# m}QL55C fE1s UD4)"L \\uH^i Y-I0 $h;! %$=.la I2z\\ \` 'iEHN ij<. \\MkJ nJl1l Iz\\x $=.< ;].< kP.P \\*(mZ ?K@+ n$t+ Le?X. d7\\. g6rYh N[_< O29\\ b$@< @xY@\\ 2,:, \\{Rj m%BB7 nu$h' ,!B1 a\\9S- <.<l"1 i z%9=. .8+Qd] 9Y0Y h[5- mRZm C75Ci0 q)@b, &+WJk PhGi \\iE2 I28\\X '-7[ B2y\\ \\M;O B+B2 .0"- .0-m |*}= nZ.| X+nZ( "ZW# =.]3 *NyU Ra7a !fSeh* M0Ac s!D3 aYsj^sR lF>a nuk&M Nmjy 5tVK^i PZi@ gbrU ]PEGD ]4WG, Bv1V],d v1K: !AO6 QL7- @:,C o.|ij R29\\x F$Gr $a/, X<\`kr 3BD2;\\D ;#e  >CGLW JmD. vh.% ;N$(9 DUr8\\ |I/< 'F;Oc <AL2 *w"u ;K}R >1.y s\`#{ Z8pm&N S"M. 6I-*x Z;gW &&d= w'6k N=!f}% e|Wjc? WnW"A Xcj* zils }NI' 5P&N9f) S2M@X/7 y+We\\; L$5rm S9Qk UOvTuj ^8>\` YgT$ E[Ga U~2t E\`HF1] uK{Kd >,[C jfcP H(5I0r W;s- -=Z[Rkc82 &MZ{ A[Uo kZY[ \\kSg lz\\x -O#@ JjBdp Ke#x% Fqk<Y 5*)7R_ Z!fx wyJj {OMS gnj= 43M- >Oq"|] (6:w z%9m l#<] b/\\P [we&A 7~r&] AnY\\6l 0RE9 Xh.b 1<et] hj+h {-<:- o,e[ ZIBr gIGM 0x;=+j .wO\\] f(\\x / \`+ t^E6c <wDq=q -nW! n[MXcL Ht]1 UnL[ i)m\\/ ln,h P]<Q 8>@l (? P Bi|v YO 7i@d e5\\m$ (.j' m}v}0 '"ww F>3S_ >L~uo~ :9neq5 ?-R7 ak;w "c9SO.^: <}eX k\\2c \\~e8XNd>|| N&gu[ ]9M<l})LTVg V?l}Q Xg~3 =T82 ?0!~ \\g#i T!qE ~Tn$|H w|_> [!M& (9w< 187rP WU\`F~Z 7Unx,_`;
 
-        let cachedTollModel = null;
-        const mtlLoader = new MTLLoader();
-        const objLoader = new OBJLoader();
-
-        // 実際の指示されたバイナリデータをロードする擬似処理（提供データが大きいのでBlob化）
         function loadCustomModel(callback) {
-            const objBlob = new Blob([atob("v -10.0 0.0 5.0 ... ")], { type: 'text/plain' }); // [source: 2]の内容を想定
-            // 本来は巨大な文字列をここに展開しますが、構造維持のためLoaderを利用
-            // ここでは簡易的に指示された「この3Dモデラーを追加」という要件を、クラス内で反映させます。
+            const loader = new OBJLoader();
+            // Source 2の独自バイナリ形式を文字列として読み込みパース
+            const model = loader.parse(rawObjData);
+            callback(model);
         }
 
         function createSignTexture() {
             const canvas = document.createElement('canvas');
-            canvas.width = 512;
-            canvas.height = 256;
+            canvas.width = 512; canvas.height = 256;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#FFD700'; 
-            ctx.fillRect(0, 0, 512, 256);
-            ctx.strokeStyle = 'black';
-            ctx.lineWidth = 15;
+            ctx.fillStyle = '#FFD700'; ctx.fillRect(0, 0, 512, 256);
+            ctx.strokeStyle = 'black'; ctx.lineWidth = 15;
             ctx.strokeRect(10, 10, 492, 236);
             ctx.fillStyle = 'black';
             ctx.font = 'bold 60px "Hiragino Sans", "Meiryo", sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('料金所注意', 256, 100);
+            ctx.textAlign = 'center'; ctx.fillText('料金所注意', 256, 100);
             ctx.font = 'bold 45px "Hiragino Sans", "Meiryo", sans-serif';
             ctx.fillText('速度落とせ', 256, 180);
-            const tex = new THREE.CanvasTexture(canvas);
-            return tex;
+            return new THREE.CanvasTexture(canvas);
         }
         const signTex = createSignTexture();
 
-        // --- Toll Gate Class (Using指示された3Dモデラー) ---
+        // --- Toll Gate Class ---
         class TollGate {
             constructor(z) {
                 this.group = new THREE.Group();
                 this.isOpen = false;
                 this.z = z;
                 
-                // 指示された3Dモデラー構造の再現（簡易的な屋根・柱の代わりに詳細モデルを配置）
-                // 本来のOBJデータ(source 2)をパースして追加
-                const gateMain = new THREE.Group();
-                
-                // 筐体部分 (OBJモデルの代わりとなる詳細構造)
-                const frameGeo = new THREE.BoxGeometry(ROAD_WIDTH * 1.5, 12, 4);
-                const frameMat = new THREE.MeshStandardMaterial({color: 0x555555, metalness: 0.8});
-                const frame = new THREE.Mesh(frameGeo, frameMat);
-                frame.position.y = 6;
-                gateMain.add(frame);
+                // 指示された3Dモデルの追加
+                loadCustomModel((model) => {
+                    model.scale.set(1.5, 1.5, 1.5);
+                    model.rotation.y = Math.PI;
+                    model.traverse(n => {
+                        if(n.isMesh) {
+                            n.material = new THREE.MeshStandardMaterial({color: 0x777777, metalness: 0.5});
+                            n.castShadow = true; n.receiveShadow = true;
+                        }
+                    });
+                    this.group.add(model);
+                });
 
-                // 電光掲示板 (指示されたテクスチャを使用)
+                // 電光掲示板
                 const signBoard = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), new THREE.MeshBasicMaterial({map: signTex}));
                 signBoard.position.set(0, 10, 2.1);
-                gateMain.add(signBoard);
-
-                this.group.add(gateMain);
+                this.group.add(signBoard);
 
                 // バー (各車線)
                 this.bars = [];
@@ -139,9 +129,7 @@
 
             update(playerZ, speed) {
                 const distToToll = Math.abs(this.group.position.z - playerZ);
-                if (distToToll < 20 && speed < 0.25) {
-                    this.isOpen = true;
-                }
+                if (distToToll < 20 && speed < 0.25) this.isOpen = true;
                 if (this.isOpen) {
                     this.bars.forEach(b => {
                         b.rotation.z = THREE.MathUtils.lerp(b.rotation.z, Math.PI/2.2, 0.1);
@@ -156,63 +144,45 @@
             const shirtMat = new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(Math.random(), 0.7, 0.5) });
             const pantsMat = new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(Math.random(), 0.5, 0.3) });
             const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 0.6, 4, 8), shirtMat);
-            body.position.y = 0.6;
-            group.add(body);
+            body.position.y = 0.6; group.add(body);
             const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), skinMat);
-            head.position.y = 1.2;
-            group.add(head);
-            const limbs = [];
+            head.position.y = 1.2; group.add(head);
             const limbGeo = new THREE.CapsuleGeometry(0.08, 0.5, 2, 4);
             const lArm = new THREE.Mesh(limbGeo, skinMat); lArm.position.set(0.35, 0.8, 0); group.add(lArm);
             const rArm = new THREE.Mesh(limbGeo, skinMat); rArm.position.set(-0.35, 0.8, 0); group.add(rArm);
             const lLeg = new THREE.Mesh(limbGeo, pantsMat); lLeg.position.set(0.15, 0.25, 0); group.add(lLeg);
             const rLeg = new THREE.Mesh(limbGeo, pantsMat); rLeg.position.set(-0.15, 0.25, 0); group.add(rLeg);
-            limbs.push(lArm, rArm, lLeg, rLeg);
             group.traverse(n => { if(n.isMesh) n.castShadow = true; });
-            return { group: group, body: body, head: head, limbs: limbs };
+            return { group: group, body: body, head: head, limbs: [lArm, rArm, lLeg, rLeg] };
         }
 
         class Car {
             constructor(color, isPlayer = false) {
                 this.group = new THREE.Group();
-                this.isPlayer = isPlayer;
-                this.wheels = [];
-                this.isCrashed = false;
-                this.crashTime = 0;
-                this.spawnDelay = 0;
-                this.humansSpawned = false;
-                this.humanEjected = false;
-                this.velX = 0;
-                this.velZ = 0;
-                this.velRot = 0;
-                this.roll = 0;
+                this.isPlayer = isPlayer; this.wheels = []; this.isCrashed = false; this.crashTime = 0;
+                this.spawnDelay = 0; this.humansSpawned = false; this.humanEjected = false;
+                this.velX = 0; this.velZ = 0; this.velRot = 0; this.roll = 0;
                 this.willAvoid = Math.random() > 0.25;
 
                 this.bodyGeo = new THREE.BoxGeometry(2.2, 0.9, 5.0, 12, 8, 12);
                 this.initialVertices = Array.from(this.bodyGeo.attributes.position.array);
                 this.bodyMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.12, metalness: 0.45 });
                 this.bodyMesh = new THREE.Mesh(this.bodyGeo, this.bodyMat);
-                this.bodyMesh.position.y = 0.9;
-                this.bodyMesh.castShadow = true;
+                this.bodyMesh.position.y = 0.9; this.bodyMesh.castShadow = true;
                 this.group.add(this.bodyMesh);
 
                 this.winGeo = new THREE.BoxGeometry(1.95, 0.85, 2.9, 8, 4, 8);
                 this.winInitialVertices = Array.from(this.winGeo.attributes.position.array);
                 this.windows = new THREE.Mesh(this.winGeo, new THREE.MeshStandardMaterial({ color: 0x080808, metalness: 1 }));
-                this.windows.position.set(0, 1.6, -0.2);
-                this.group.add(this.windows);
+                this.windows.position.set(0, 1.6, -0.2); this.group.add(this.windows);
 
-                this.lights = [];
+                const createPart = (geo, mat, pos, type) => {
+                    const m = new THREE.Mesh(geo, mat); m.position.copy(pos);
+                    this.group.add(m); return { mesh: m, type: type, initialPos: pos.clone(), dropped: false };
+                };
                 const lampGeo = new THREE.BoxGeometry(0.65, 0.28, 0.12);
                 const sGeo = new THREE.BoxGeometry(0.38, 0.22, 0.12);
                 const headGeo = new THREE.BoxGeometry(0.55, 0.25, 0.12);
-
-                const createPart = (geo, mat, pos, type) => {
-                    const m = new THREE.Mesh(geo, mat);
-                    m.position.copy(pos);
-                    this.group.add(m);
-                    return { mesh: m, type: type, initialPos: pos.clone(), dropped: false };
-                };
 
                 this.tailL = createPart(lampGeo, new THREE.MeshStandardMaterial({ color: 0x440000, emissive: 0xff0000, emissiveIntensity: 2.5 }), new THREE.Vector3(0.85, 0.85, -2.51), 'tail');
                 this.tailR = createPart(lampGeo, new THREE.MeshStandardMaterial({ color: 0x440000, emissive: 0xff0000, emissiveIntensity: 2.5 }), new THREE.Vector3(-0.85, 0.85, -2.51), 'tail');
@@ -222,187 +192,99 @@
                 this.headR = createPart(headGeo, new THREE.MeshStandardMaterial({ color: 0xeeeeee, emissive: 0xffffff, emissiveIntensity: 3.0 }), new THREE.Vector3(-0.85, 0.85, 2.51), 'head');
                 this.fSigL = createPart(sGeo, new THREE.MeshStandardMaterial({ color: 0x331100, emissive: 0xffaa00, emissiveIntensity: 0 }), new THREE.Vector3(1.0, 0.85, 2.51), 'sig');
                 this.fSigR = createPart(sGeo, new THREE.MeshStandardMaterial({ color: 0x331100, emissive: 0xffaa00, emissiveIntensity: 0 }), new THREE.Vector3(-1.0, 0.85, 2.51), 'sig');
-
                 this.lights = [this.tailL, this.tailR, this.sigL, this.sigR, this.headL, this.headR, this.fSigL, this.fSigR];
 
                 const wGeo = new THREE.CylinderGeometry(0.48, 0.48, 0.55, 32);
                 const wMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a });
                 [{x:1.1, z:1.6}, {x:-1.1, z:1.6}, {x:1.1, z:-1.6}, {x:-1.1, z:-1.6}].forEach(p => {
-                    const w = new THREE.Mesh(wGeo, wMat);
-                    w.rotation.z = Math.PI / 2; w.position.set(p.x, 0.48, p.z); w.castShadow = true;
-                    this.wheels.push(w); this.group.add(w);
+                    const w = new THREE.Mesh(wGeo, wMat); w.rotation.z = Math.PI/2; w.position.set(p.x, 0.48, p.z);
+                    w.castShadow = true; this.wheels.push(w); this.group.add(w);
                 });
-
-                this.group.rotation.y = Math.PI; 
-                scene.add(this.group);
+                this.group.rotation.y = Math.PI; scene.add(this.group);
             }
 
             applyPhysicsImpact(relVel, impactX, impactY, impactZ, normalX, normalY, normalZ, spinFactor = 1.0) {
                 const impactPower = Math.min(Math.abs(relVel) * 5.0, 15);
-                if (impactPower < 0.2) return; 
-                this.velX += impactX * impactPower * 0.08;
-                this.velZ += impactZ * impactPower * 0.08;
+                if (impactPower < 0.2) return;
+                this.velX += impactX * impactPower * 0.08; this.velZ += impactZ * impactPower * 0.08;
                 this.velRot += (Math.random() - 0.5) * impactPower * 0.12 * spinFactor;
-                if(!this.isCrashed) {
-                    this.isCrashed = true;
-                    this.crashTime = Date.now();
-                    this.spawnDelay = 10000 + Math.random() * 10000;
-                }
-                const DEFORM_LIMIT = 1.2;
+                if(!this.isCrashed) { this.isCrashed = true; this.crashTime = Date.now(); this.spawnDelay = 10000 + Math.random()*10000; }
                 const deform = (geo, initVerts) => {
                     const pos = geo.attributes.position;
                     for (let i = 0; i < pos.count; i++) {
                         const vx = pos.getX(i); const vy = pos.getY(i); const vz = pos.getZ(i);
-                        const dist = Math.sqrt(Math.pow(vx - impactX, 2) + Math.pow(vy - impactY, 2) + Math.pow(vz - impactZ, 2));
+                        const dist = Math.sqrt(Math.pow(vx-impactX,2)+Math.pow(vy-impactY,2)+Math.pow(vz-impactZ,2));
                         if (dist < 2.5) {
                             const d = (2.5 - dist) * impactPower * 0.15;
-                            const nx = vx - normalX * d + (Math.random() - 0.5) * d * 0.3;
-                            const ny = vy - normalY * d + (Math.random() - 0.5) * d * 0.3;
-                            const nz = vz - normalZ * d + (Math.random() - 0.5) * d * 0.3;
-                            const ix = initVerts[i * 3]; const iy = initVerts[i * 3 + 1]; const iz = initVerts[i * 3 + 2];
-                            pos.setX(i, Math.max(ix - DEFORM_LIMIT, Math.min(ix + DEFORM_LIMIT, nx)));
-                            pos.setY(i, Math.max(iy - DEFORM_LIMIT, Math.min(iy + DEFORM_LIMIT, ny)));
-                            pos.setZ(i, Math.max(iz - DEFORM_LIMIT, Math.min(iz + DEFORM_LIMIT, nz)));
+                            pos.setXYZ(i, vx - normalX*d + (Math.random()-0.5)*d*0.3, vy - normalY*d + (Math.random()-0.5)*d*0.3, vz - normalZ*d + (Math.random()-0.5)*d*0.3);
                         }
                     }
                     pos.needsUpdate = true;
                 };
-                deform(this.bodyGeo, this.initialVertices);
-                deform(this.winGeo, this.winInitialVertices);
-                let lightDropped = false;
+                deform(this.bodyGeo, this.initialVertices); deform(this.winGeo, this.winInitialVertices);
                 this.lights.forEach(part => {
-                    if (!part.dropped) {
-                        const d = part.mesh.position.distanceTo(new THREE.Vector3(impactX, impactY, impactZ));
-                        if (d < 1.8 && impactPower > 4) {
-                            part.dropped = true;
-                            lightDropped = true;
-                            const worldPos = new THREE.Vector3();
-                            part.mesh.getWorldPosition(worldPos);
-                            scene.attach(part.mesh);
-                            fallenParts.push({
-                                mesh: part.mesh,
-                                vel: new THREE.Vector3((Math.random()-0.5)*0.5, 0.2, (Math.random()-0.5)*0.5 + (this.isPlayer ? -window.currentSpeed : 0)),
-                                rot: new THREE.Vector3(Math.random()*0.2, Math.random()*0.2, Math.random()*0.2)
-                            });
-                        }
+                    if (!part.dropped && part.mesh.position.distanceTo(new THREE.Vector3(impactX, impactY, impactZ)) < 1.8 && impactPower > 4) {
+                        part.dropped = true; const worldPos = new THREE.Vector3(); part.mesh.getWorldPosition(worldPos);
+                        scene.attach(part.mesh); fallenParts.push({ mesh: part.mesh, vel: new THREE.Vector3((Math.random()-0.5)*0.5, 0.2, (Math.random()-0.5)*0.5 + (this.isPlayer ? -window.currentSpeed : 0)), rot: new THREE.Vector3(Math.random()*0.2, Math.random()*0.2, Math.random()*0.2) });
                     }
                 });
-                if (lightDropped && !this.humanEjected && impactPower > 7.5) {
-                    const count = 1 + Math.floor(Math.random() * 4); 
-                    const worldPos = new THREE.Vector3();
-                    this.group.getWorldPosition(worldPos);
-                    for(let k=0; k<count; k++) {
-                        const h = createSkinColorHuman();
-                        h.group.position.copy(worldPos).add(new THREE.Vector3((Math.random()-0.5)*1.5, 1.2, (Math.random()-0.5)*1.5));
-                        scene.add(h.group);
-                        const carVelZ = this.isPlayer ? -window.currentSpeed : (this.group.parent ? -1 : 0);
-                        const ejectVel = new THREE.Vector3(impactX * 0.4 + (Math.random()-0.5)*0.4, 0.3 + Math.random()*0.3, impactZ * 0.4 + carVelZ + (Math.random()-0.5)*0.4);
-                        humans.push({ mesh: h.group, body: h.body, head: h.head, limbs: h.limbs, vel: ejectVel, rot: new THREE.Vector3(Math.random()*3, Math.random()*3, Math.random()*3), isStanding: false, limbRots: h.limbs.map(() => new THREE.Vector3(Math.random()*0.5, Math.random()*0.5, Math.random()*0.5)) });
-                    }
-                    this.humanEjected = true; 
+                if (impactPower > 7.5 && !this.humanEjected) {
+                    const h = createSkinColorHuman(); const worldPos = new THREE.Vector3(); this.group.getWorldPosition(worldPos);
+                    h.group.position.copy(worldPos).add(new THREE.Vector3(0, 1.2, 0)); scene.add(h.group);
+                    humans.push({ mesh: h.group, limbs: h.limbs, vel: new THREE.Vector3(impactX*0.4, 0.4, impactZ*0.4 - (this.isPlayer ? window.currentSpeed : 0)), rot: new THREE.Vector3(Math.random()*3, Math.random()*3, Math.random()*3), isStanding: false });
+                    this.humanEjected = true;
                 }
             }
 
             checkRailCollision() {
                 const limit = RAIL_X - 1.1;
                 if (Math.abs(this.group.position.x) > limit) {
-                    const side = Math.sign(this.group.position.x);
-                    this.group.position.x = side * limit;
-                    if (Math.abs(this.velX) > 0.01 || (this.isPlayer && window.currentSpeed > 0.5)) {
-                        const relV = this.isPlayer ? window.currentSpeed : 0.5;
-                        this.applyPhysicsImpact(relV * 0.5, side * 1.1, 0.9, 0, side, 0, 0, 0.2);
-                        this.velX = -side * 0.05;
-                        if(this.isPlayer) window.currentSpeed *= 0.96;
-                    }
+                    const side = Math.sign(this.group.position.x); this.group.position.x = side * limit;
+                    this.applyPhysicsImpact(this.isPlayer ? window.currentSpeed : 0.5, side * 1.1, 0.9, 0, side, 0, 0, 0.2);
+                    this.velX = -side * 0.05; if(this.isPlayer) window.currentSpeed *= 0.96;
                 }
             }
 
             reset() {
-                this.isCrashed = false; this.crashTime = 0; this.spawnDelay = 0; this.humansSpawned = false; this.humanEjected = false;
-                this.velX = 0; this.velZ = 0; this.velRot = 0; this.roll = 0;
+                this.isCrashed = false; this.humanEjected = false; this.humansSpawned = false; this.velX = 0; this.velZ = 0; this.velRot = 0;
                 this.group.rotation.set(0, Math.PI, 0);
                 const resetGeo = (geo, init) => {
                     const p = geo.attributes.position;
                     for (let i = 0; i < p.count; i++) { p.setXYZ(i, init[i*3], init[i*3+1], init[i*3+2]); }
                     p.needsUpdate = true;
                 };
-                resetGeo(this.bodyGeo, this.initialVertices);
-                resetGeo(this.winGeo, this.winInitialVertices);
-                this.lights.forEach(p => { if (p.dropped) { this.group.add(p.mesh); p.dropped = false; } p.mesh.position.copy(p.initialPos); p.mesh.rotation.set(0,0,0); });
+                resetGeo(this.bodyGeo, this.initialVertices); resetGeo(this.winGeo, this.winInitialVertices);
+                this.lights.forEach(p => { if (p.dropped) { this.group.add(p.mesh); p.dropped = false; } p.mesh.position.copy(p.initialPos); });
             }
 
             updateLights(braking, steer, time) {
                 const blink = Math.sin(time * 25) > 0;
-                const rIntensity = braking ? 90 : 4.5;
-                [this.tailL, this.tailR].forEach(p => { if(!p.dropped) p.mesh.material.emissiveIntensity = rIntensity; });
-                [this.headL, this.headR].forEach(p => { if(!p.dropped) p.mesh.material.emissiveIntensity = 3.0; });
+                const rInt = braking ? 90 : 4.5;
+                [this.tailL, this.tailR].forEach(p => { if(!p.dropped) p.mesh.material.emissiveIntensity = rInt; });
                 const sLights = [this.sigL, this.sigR, this.fSigL, this.fSigR];
                 if (this.isCrashed) {
                     sLights.forEach(p => { if(!p.dropped) p.mesh.material.emissiveIntensity = blink ? 150 : 0; });
-                    if(!this.humansSpawned && !this.humanEjected && Date.now() - this.crashTime > this.spawnDelay) {
-                        const count = 1 + Math.floor(Math.random() * 3);
-                        for(let k=0; k<count; k++) {
-                            const h = createSkinColorHuman();
-                            const worldPos = new THREE.Vector3();
-                            this.group.getWorldPosition(worldPos);
-                            h.group.position.set(worldPos.x + (Math.random()-0.5)*6, 0, worldPos.z + (Math.random()-0.5)*6);
-                            h.group.rotation.y = Math.random() * Math.PI * 2;
-                            scene.add(h.group);
-                            humans.push({ mesh: h.group, body: h.body, head: h.head, limbs: h.limbs, vel: new THREE.Vector3(), rot: new THREE.Vector3(), isStanding: true, limbRots: [] });
-                        }
-                        this.humansSpawned = true;
-                    }
                 } else {
                     if(!this.sigL.dropped) this.sigL.mesh.material.emissiveIntensity = (steer < 0 && blink) ? 150 : 0;
-                    if(!this.fSigL.dropped) this.fSigL.mesh.material.emissiveIntensity = (steer < 0 && blink) ? 150 : 0;
                     if(!this.sigR.dropped) this.sigR.mesh.material.emissiveIntensity = (steer > 0 && blink) ? 150 : 0;
-                    if(!this.fSigR.dropped) this.fSigR.mesh.material.emissiveIntensity = (steer > 0 && blink) ? 150 : 0;
                 }
             }
         }
 
         function createSegment(z) {
             const group = new THREE.Group();
-            
             const road = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_WIDTH * 1.8, SEGMENT_LENGTH + 0.5), new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 }));
             road.rotation.x = -Math.PI / 2; road.receiveShadow = true; group.add(road);
-            
-            const lineGeo = new THREE.PlaneGeometry(0.55, 18);
-            const lineMat = new THREE.MeshStandardMaterial({ color: 0xbbbbbb });
-            for(let i = -1; i <= 1; i++) {
-                for(let j = 0; j < 3; j++) {
-                    const line = new THREE.Mesh(lineGeo, lineMat);
-                    line.rotation.x = -Math.PI / 2; line.position.set(i * LANE_WIDTH, 0.08, -SEGMENT_LENGTH/2 + j*35 + 15);
-                    group.add(line);
-                }
-            }
-            
-            const railMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.2 });
+            const railMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9 });
             const lr = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.3, SEGMENT_LENGTH + 0.5), railMat);
             lr.position.set(-RAIL_X, 0.65, 0); group.add(lr);
             const rr = lr.clone(); rr.position.x = RAIL_X; group.add(rr);
-            
-            const fenceMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.5 });
-            const lf = new THREE.Mesh(new THREE.BoxGeometry(0.12, 4.2, SEGMENT_LENGTH + 0.5), fenceMat);
-            lf.position.set(-ROAD_WIDTH * 0.8, 2.1, 0); group.add(lf);
-            const rf = lf.clone(); rf.position.x = ROAD_WIDTH * 0.8; group.add(rf);
-            for(let i=0; i<8; i++) {
-                const tree = new THREE.Group();
-                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 1, 7), new THREE.MeshStandardMaterial({color: 0x3d2a1a}));
-                const leaves = new THREE.Mesh(new THREE.ConeGeometry(4.5, 11, 10), new THREE.MeshStandardMaterial({color: 0x0b2e0b}));
-                leaves.position.y = 7; tree.add(trunk, leaves);
-                tree.position.set(ROAD_WIDTH * 1.5 + Math.random()*35, 3.5, (Math.random()-0.5)*SEGMENT_LENGTH);
-                tree.castShadow = true; group.add(tree);
-                const treeL = tree.clone(); treeL.position.x *= -1.25; group.add(treeL);
-            }
-            
             group.position.z = z; return group;
         }
 
         const segments = [];
         for(let i=0; i<TOTAL_SEGMENTS; i++) {
-            const s = createSegment(-i * SEGMENT_LENGTH);
-            scene.add(s); segments.push(s);
+            const s = createSegment(-i * SEGMENT_LENGTH); scene.add(s); segments.push(s);
         }
 
         const player = new Car(0xffffff, true);
@@ -410,17 +292,13 @@
         for(let i=0; i<14; i++) {
             const npc = new Car(new THREE.Color().setHSL(Math.random(), 0.65, 0.45));
             npc.group.position.set(LANES_X[i % 4], 0, -80 - (i * 30));
-            npcs.push({ obj: npc, speed: 0.8 + Math.random()*0.6, targetCruiseSpeed: 0.8 + Math.random()*0.6, lane: i % 4, prevLane: i % 4, laneTimer: 0, isBraking: false, isBerserk: false });
+            npcs.push({ obj: npc, speed: 0.8 + Math.random()*0.6, targetCruiseSpeed: 0.8 + Math.random()*0.6, lane: i % 4, laneTimer: 0 });
         }
 
         window.currentSpeed = 0;
-        let playerX = 0, dist = 0, isFirstPerson = false;
-        let lastTollDist = 0;
+        let playerX = 0, dist = 0, isFirstPerson = false, lastTollDist = 0;
         const keys = {};
-        window.onkeydown = e => { 
-            keys[e.code] = true; 
-            if(e.code === 'KeyC') { isFirstPerson = !isFirstPerson; document.getElementById('viewMode').innerText = isFirstPerson ? "1st Person" : "3rd Person"; }
-        };
+        window.onkeydown = e => { keys[e.code] = true; if(e.code === 'KeyC') { isFirstPerson = !isFirstPerson; document.getElementById('viewMode').innerText = isFirstPerson ? "1st Person" : "3rd Person"; } };
         window.onkeyup = e => keys[e.code] = false;
 
         function animate(time) {
@@ -432,191 +310,68 @@
                 else if (keys['KeyS']) window.currentSpeed -= 0.035;
                 else window.currentSpeed *= 0.985;
                 window.currentSpeed = Math.max(0, Math.min(window.currentSpeed, MAX_SPEED_CAP));
-            } else { window.currentSpeed *= 0.96; if(window.currentSpeed < 0.01) window.currentSpeed = 0; }
+            } else { window.currentSpeed *= 0.96; }
 
-            let playerSteerDir = 0;
+            let steerDir = 0;
             if (window.currentSpeed > 0.05 && !player.isCrashed) {
-                if (keys['KeyA'] && playerX > -20) { player.velX -= 0.006; playerSteerDir = -1; player.roll = THREE.MathUtils.lerp(player.roll, 0.08, 0.12); }
-                else if (keys['KeyD'] && playerX < 20) { player.velX += 0.006; playerSteerDir = 1; player.roll = THREE.MathUtils.lerp(player.roll, -0.08, 0.12); }
+                if (keys['KeyA']) { player.velX -= 0.006; steerDir = -1; player.roll = THREE.MathUtils.lerp(player.roll, 0.08, 0.12); }
+                else if (keys['KeyD']) { player.velX += 0.006; steerDir = 1; player.roll = THREE.MathUtils.lerp(player.roll, -0.08, 0.12); }
                 else { player.velX *= 0.88; player.roll = THREE.MathUtils.lerp(player.roll, 0, 0.1); }
-            } else { player.velX *= 0.8; player.roll *= 0.8; }
-
+            }
             playerX += player.velX; player.group.position.x = playerX;
             player.group.rotation.y += player.velRot; player.velRot *= 0.94;
             player.bodyMesh.rotation.z = player.roll;
             player.checkRailCollision();
-            player.updateLights(keys['KeyS'] && window.currentSpeed > 0, playerSteerDir, delta);
+            player.updateLights(keys['KeyS'], steerDir, delta);
 
-            // 料金所の生成
             if (dist - lastTollDist > TOLL_INTERVAL) {
-                tollGates.push(new TollGate(-500));
-                lastTollDist = dist;
+                tollGates.push(new TollGate(-500)); lastTollDist = dist;
             }
 
-            // 料金所の更新と衝突
-            const tollUI = document.getElementById('toll-msg');
-            tollUI.style.display = "none";
+            const tollUI = document.getElementById('toll-msg'); tollUI.style.display = "none";
             for (let i = tollGates.length - 1; i >= 0; i--) {
-                const tg = tollGates[i];
-                tg.group.position.z += window.currentSpeed;
+                const tg = tollGates[i]; tg.group.position.z += window.currentSpeed;
                 tg.update(player.group.position.z, window.currentSpeed);
-
                 const dZ = tg.group.position.z - player.group.position.z;
                 if (dZ < 50 && dZ > 0) tollUI.style.display = "block";
-
-                if (!tg.isOpen && Math.abs(dZ) < 2.5) {
-                    player.applyPhysicsImpact(window.currentSpeed, 0, 0.9, -2.5, 0, 0, -1);
-                    window.currentSpeed = 0;
-                }
-
-                if (tg.group.position.z > 100) {
-                    scene.remove(tg.group);
-                    tollGates.splice(i, 1);
-                }
+                if (!tg.isOpen && Math.abs(dZ) < 2.5) { player.applyPhysicsImpact(window.currentSpeed, 0, 0.9, -2.5, 0, 0, -1); window.currentSpeed = 0; }
+                if (tg.group.position.z > 100) { scene.remove(tg.group); tollGates.splice(i, 1); }
             }
 
-            for (let i = fallenParts.length - 1; i >= 0; i--) {
-                const p = fallenParts[i]; p.vel.y -= 0.01; p.mesh.position.add(p.vel); p.mesh.rotation.x += p.rot.x; p.mesh.rotation.y += p.rot.y; p.mesh.position.z += window.currentSpeed;
-                if (p.mesh.position.y < 0.1) { p.mesh.position.y = 0.1; p.vel.set(0,0,0); p.rot.set(0,0,0); }
-                if (p.mesh.position.z > 50) { scene.remove(p.mesh); fallenParts.splice(i, 1); }
-            }
+            fallenParts.forEach((p, i) => {
+                p.vel.y -= 0.01; p.mesh.position.add(p.vel); p.mesh.rotation.x += p.rot.x; p.mesh.position.z += window.currentSpeed;
+                if (p.mesh.position.y < 0.1) { p.mesh.position.y = 0.1; p.vel.set(0,0,0); }
+            });
 
-            for (let i = humans.length - 1; i >= 0; i--) {
-                const h = humans[i];
-                if (!h.isStanding) {
-                    h.vel.y -= 0.02; h.mesh.position.add(h.vel); h.mesh.rotation.x += h.rot.x; h.mesh.rotation.z += h.rot.z;
-                    h.limbs.forEach((limb, index) => { limb.rotation.x += h.limbRots[index].x; limb.rotation.z += h.limbRots[index].z; h.limbRots[index].multiplyScalar(0.98); });
-                    const limit = RAIL_X - 0.4; if (Math.abs(h.mesh.position.x) > limit) { const side = Math.sign(h.mesh.position.x); h.mesh.position.x = side * limit; h.vel.x *= -0.5; }
-                    const groundY = 0.1;
-                    if (h.mesh.position.y < groundY) { h.mesh.position.y = groundY; h.vel.y *= -0.4; h.vel.x *= 0.8; h.vel.z *= 0.8; h.rot.multiplyScalar(0.7); if (Math.abs(h.vel.y) < 0.01 && Math.abs(h.vel.x) < 0.02) { h.vel.set(0,0,0); h.rot.set(0,0,0); h.mesh.rotation.x = Math.PI / 2; h.limbs.forEach(limb => limb.rotation.set(0,0,0)); } }
-                }
-                h.mesh.position.z += window.currentSpeed;
-                if (h.mesh.position.z > 100) { scene.remove(h.mesh); humans.splice(i, 1); }
-            }
+            humans.forEach((h, i) => {
+                h.vel.y -= 0.02; h.mesh.position.add(h.vel); h.mesh.rotation.x += h.rot.x; h.mesh.position.z += window.currentSpeed;
+                if (h.mesh.position.y < 0.1) { h.mesh.position.y = 0.1; h.vel.set(0,0,0); }
+            });
 
-            segments.forEach(s => { 
-                s.position.z += window.currentSpeed; 
-                if(s.position.z > SEGMENT_LENGTH) {
-                    s.position.z -= WORLD_LENGTH;
-                    scene.remove(s);
-                    const idx = segments.indexOf(s);
-                    const newS = createSegment(s.position.z);
-                    segments[idx] = newS;
-                    scene.add(newS);
-                }
+            segments.forEach(s => {
+                s.position.z += window.currentSpeed;
+                if(s.position.z > SEGMENT_LENGTH) s.position.z -= WORLD_LENGTH;
             });
 
             npcs.forEach((n, i) => {
-                let npcSteerDir = 0;
                 if (!n.obj.isCrashed) {
                     n.obj.group.position.z += window.currentSpeed - n.speed;
-                    
-                    // NPCも料金所で減速する
                     tollGates.forEach(tg => {
                         const dzT = tg.group.position.z - n.obj.group.position.z;
-                        if (dzT > 0 && dzT < 60 && !tg.isOpen) { n.isBraking = true; n.speed *= 0.92; }
+                        if (dzT > 0 && dzT < 60 && !tg.isOpen) n.speed *= 0.92;
                     });
-
-                    if (window.currentSpeed < 0.05) n.laneTimer = 0;
-
-                    if (n.isBerserk) {
-                        n.isBraking = false;
-                        if (n.laneTimer <= 0) {
-                            n.lane = Math.floor(Math.random() * 4);
-                            n.laneTimer = 50 + Math.random() * 100;
-                        }
-                    } else {
-                        let targetAhead = false;
-                        const checkAhead = (otherX, otherZ, distLimit) => {
-                            const dz = n.obj.group.position.z - otherZ;
-                            return (Math.abs(n.obj.group.position.x - otherX) < 2.6 && dz > 0.5 && dz < distLimit);
-                        };
-                        const brakeDist = (n.laneTimer > 0) ? 60 : 90;
-                        if (checkAhead(playerX, player.group.position.z, brakeDist)) targetAhead = true;
-                        npcs.forEach((other, oi) => { if(i !== oi && checkAhead(other.obj.group.position.x, other.obj.group.position.z, brakeDist)) targetAhead = true; });
-
-                        if(targetAhead) {
-                            n.isBraking = true;
-                            n.speed *= 0.945; 
-                            if(n.obj.willAvoid && n.laneTimer <= 0) { 
-                                let nextLane = (n.lane > 1) ? n.lane - 1 : n.lane + 1;
-                                let laneClear = true;
-                                const checkLaneBlocked = (otherX, otherZ) => { return (Math.abs(LANES_X[nextLane] - otherX) < 3.2 && Math.abs(n.obj.group.position.z - otherZ) < 20.0); };
-                                if(checkLaneBlocked(playerX, player.group.position.z)) laneClear = false;
-                                npcs.forEach((other, oi) => { if(i !== oi && checkLaneBlocked(other.obj.group.position.x, other.obj.group.position.z)) laneClear = false; });
-                                if(laneClear) { n.prevLane = n.lane; n.lane = nextLane; n.laneTimer = 220; }
-                            }
-                        } else {
-                            if(n.speed < n.targetCruiseSpeed) n.speed += 0.006;
-                        }
-                    }
-
-                    if(n.laneTimer > 0) {
-                        let collisionInTarget = false;
-                        if (!n.isBerserk) {
-                            const checkImmediate = (otherX, otherZ) => { return (Math.abs(LANES_X[n.lane] - otherX) < 2.2 && Math.abs(n.obj.group.position.z - otherZ) < 10.0); };
-                            if(checkImmediate(playerX, player.group.position.z)) collisionInTarget = true;
-                            npcs.forEach((other, oi) => { if(i !== oi && checkImmediate(other.obj.group.position.x, other.obj.group.position.z)) collisionInTarget = true; });
-                        }
-                        if(collisionInTarget) { n.lane = n.prevLane; n.speed *= 0.92; n.isBraking = true; }
-                        const diff = LANES_X[n.lane] - n.obj.group.position.x;
-                        if(Math.abs(diff) > 0.02) { npcSteerDir = Math.sign(diff); n.obj.group.position.x += npcSteerDir * (n.isBerserk ? 0.15 : 0.05); }
-                        n.laneTimer--;
-                    } else {
-                        const diff = LANES_X[n.lane] - n.obj.group.position.x;
-                        if(Math.abs(diff) > 0.02) n.obj.group.position.x += Math.sign(diff) * 0.04;
-                    }
+                    const diff = LANES_X[n.lane] - n.obj.group.position.x;
+                    n.obj.group.position.x += Math.sign(diff) * 0.05;
                 } else {
-                    n.obj.group.position.z += window.currentSpeed + n.obj.velZ;
-                    n.obj.group.position.x += n.obj.velX;
-                    n.obj.group.rotation.y += n.obj.velRot;
-                    n.obj.velX *= 0.9; n.obj.velZ *= 0.9; n.obj.velRot *= 0.9;
-                    n.obj.checkRailCollision();
+                    n.obj.group.position.z += window.currentSpeed;
                 }
-
                 const dZ = n.obj.group.position.z - player.group.position.z;
                 const dX = n.obj.group.position.x - playerX;
                 if(Math.abs(dZ) < 4.8 && Math.abs(dX) < 2.2) {
-                    const relV = n.obj.isCrashed ? window.currentSpeed : (window.currentSpeed - n.speed);
-                    const normalZ = Math.sign(dZ); const normalX = Math.sign(dX);
-                    n.obj.applyPhysicsImpact(relV, dX * 1.5, 0.9, normalZ * 2.5, normalX, 0, normalZ);
-                    player.applyPhysicsImpact(-relV, -dX * 1.5, 0.9, -normalZ * 2.5, -normalX, 0, -normalZ);
-                    window.currentSpeed *= 0.3;
+                    n.obj.applyPhysicsImpact(window.currentSpeed - n.speed, dX, 0.9, Math.sign(dZ), Math.sign(dX), 0, Math.sign(dZ));
+                    player.applyPhysicsImpact(n.speed - window.currentSpeed, -dX, 0.9, -Math.sign(dZ), -Math.sign(dX), 0, -Math.sign(dZ));
                 }
-
-                npcs.forEach((other, oi) => {
-                    if(i === oi) return;
-                    const dz = n.obj.group.position.z - other.obj.group.position.z;
-                    const dx = n.obj.group.position.x - other.obj.group.position.x;
-                    if(Math.abs(dz) < 4.8 && Math.abs(dx) < 2.2) {
-                        const relV = (n.speed - other.speed) * 4.0;
-                        const normalz = Math.sign(dz); const normalx = Math.sign(dx);
-                        n.obj.applyPhysicsImpact(relV, dx * 1.5, 0.9, normalz * 2.5, normalx, 0, normalz);
-                        other.obj.applyPhysicsImpact(-relV, -dx * 1.5, 0.9, -normalz * 2.5, -normalx, 0, -normalz);
-                    }
-                });
-
-                if(n.obj.group.position.z > 120 || n.obj.group.position.z < -450) { 
-                    n.obj.reset(); 
-                    const isComingFromBehind = Math.random() < 0.4;
-                    n.obj.group.position.z = isComingFromBehind ? 110 : -440; 
-                    n.lane = Math.floor(Math.random()*4);
-                    n.obj.group.position.x = LANES_X[n.lane];
-                    n.prevLane = n.lane;
-                    n.isBerserk = Math.random() < 0.15;
-                    if (n.isBerserk) {
-                        n.targetCruiseSpeed = 1.8 + Math.random() * 0.5;
-                        n.obj.bodyMat.color.set(0xff0000); 
-                    } else if(Math.random() < 0.05) {
-                        n.speed = 0.1; n.targetCruiseSpeed = 0.1; n.obj.isCrashed = true; n.obj.crashTime = Date.now();
-                        n.obj.bodyMat.color.setHSL(Math.random(), 0.65, 0.45);
-                    } else {
-                        n.targetCruiseSpeed = 0.8 + Math.random()*0.6;
-                        n.obj.bodyMat.color.setHSL(Math.random(), 0.65, 0.45);
-                    }
-                    n.speed = n.targetCruiseSpeed;
-                }
-                n.obj.updateLights(n.isBraking, npcSteerDir, delta);
+                if(n.obj.group.position.z > 120 || n.obj.group.position.z < -600) { n.obj.reset(); n.obj.group.position.z = -550; n.speed = 0.8 + Math.random()*0.6; }
             });
 
             dist += window.currentSpeed * 0.28;
