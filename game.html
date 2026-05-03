@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Ultimate Highway Simulator - Random Tunnels</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #87CEEB; font-family: 'Segoe UI', sans-serif; }
+        #gui { position: absolute; top: 30px; left: 30px; color: white; text-shadow: 2px 2px 5px rgba(0,0,0,0.8); pointer-events: none; z-index: 10; }
+        .stat { font-size: 32px; font-weight: 900; font-style: italic; margin-bottom: 5px; border-left: 5px solid #ffcc00; padding-left: 15px; }
+        #instructions { position: absolute; bottom: 30px; width: 100%; text-align: center; color: white; font-size: 18px; text-shadow: 1px 1px 3px black; background: rgba(0,0,0,0.4); padding: 10px 0; z-index: 10; }
+    </style>
+</head>
+<body>
+
+    <div id="gui">
+        <div class="stat">SPEED: <span id="speed">0</span> km/h</div>
+        <div class="stat">DIST: <span id="dist">0</span> m</div>
+        <div class="stat">VIEW: <span id="viewMode">3rd Person</span></div>
+    </div>
+    <div id="instructions">W: 加速 / S: ブレーキ / A,D: ステア / C: 視点切替 / スムーズな車線変更 & 暴走車注意</div>
+
+    <script type="module">
+        import * as THREE from 'https://unpkg.com/three@0.157.0/build/three.module.js';
+
+        // --- Constants ---
+        const LANE_WIDTH = 6;
+        const ROAD_WIDTH = LANE_WIDTH * 4;
+        const SEGMENT_LENGTH = 100;
+        const TOTAL_SEGMENTS = 8; 
+        const WORLD_LENGTH = SEGMENT_LENGTH * TOTAL_SEGMENTS;
+        const LANES_X = [-9, -3, 3, 9];
+        const RAIL_X = ROAD_WIDTH * 0.65;
+        const MAX_SPEED_CAP = 1.8;
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x82CAFF);
+        scene.fog = new THREE.Fog(0x82CAFF, 60, 450);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        document.body.appendChild(renderer.domElement);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+        const sun = new THREE.DirectionalLight(0xffffff, 1.8);
+        sun.position.set(100, 200, 100);
+        sun.castShadow = true;
+        sun.shadow.mapSize.set(2048, 2048);
+        scene.add(sun);
+
+        const fallenParts = [];
+        const humans = [];
+
+        function createSignTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#FFD700'; 
+            ctx.fillRect(0, 0, 512, 256);
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 15;
+            ctx.strokeRect(10, 10, 492, 236);
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 60px "Hiragino Sans", "Meiryo", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('トンネル注意', 256, 100);
+            ctx.font = 'bold 45px "Hiragino Sans", "Meiryo", sans-serif';
+            ctx.fillText('速度落とせ', 256, 180);
+            const tex = new THREE.CanvasTexture(canvas);
+            return tex;
+        }
+        const signTex = createSignTexture();
+
+        function createSkinColorHuman() {
+            const group = new THREE.Group();
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
+            const shirtMat = new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(Math.random(), 0.7, 0.5) });
+            const pantsMat = new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(Math.random(), 0.5, 0.3) });
+            const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 0.6, 4, 8), shirtMat);
+            body.position.y = 0.6;
+            group.add(body);
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), skinMat);
+            head.position.y = 1.2;
+            group.add(head);
+            const limbs = [];
+            const limbGeo = new THREE.CapsuleGeometry(0.08, 0.5, 2, 4);
+            const lArm = new THREE.Mesh(limbGeo, skinMat); lArm.position.set(0.35, 0.8, 0); group.add(lArm);
+            const rArm = new THREE.Mesh(limbGeo, skinMat); rArm.position.set(-0.35, 0.8, 0); group.add(rArm);
+            const lLeg = new THREE.Mesh(limbGeo, pantsMat); lLeg.position.set(0.15, 0.25, 0); group.add(lLeg);
+            const rLeg = new THREE.Mesh(limbGeo, pantsMat); rLeg.position.set(-0.15, 0.25, 0); group.add(rLeg);
+            limbs.push(lArm, rArm, lLeg, rLeg);
+            group.traverse(n => { if(n.isMesh) n.castShadow = true; });
+            return { group: group, body: body, head: head, limbs: limbs };
+        }
+
+        class Car {
+            constructor(color, isPlayer = false) {
+                this.group = new THREE.Group();
+                this.isPlayer = isPlayer;
+                this.wheels = [];
+                this.isCrashed = false;
+                this.crashTime = 0;
+                this.spawnDelay = 0;
+                this.humansSpawned = false;
+                this.humanEjected = false;
+                this.velX = 0;
+                this.velZ = 0;
+                this.velRot = 0;
+                this.roll = 0;
+                this.willAvoid = Math.random() > 0.25;
+
+                this.bodyGeo = new THREE.BoxGeometry(2.2, 0.9, 5.0, 12, 8, 12);
+                this.initialVertices = Array.from(this.bodyGeo.attributes.position.array);
+                this.bodyMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.12, metalness: 0.45 });
+                this.bodyMesh = new THREE.Mesh(this.bodyGeo, this.bodyMat);
+                this.bodyMesh.position.y = 0.9;
+                this.bodyMesh.castShadow = true;
+                this.group.add(this.bodyMesh);
+
+                this.winGeo = new THREE.BoxGeometry(1.95, 0.85, 2.9, 8, 4, 8);
+                this.winInitialVertices = Array.from(this.winGeo.attributes.position.array);
+                this.windows = new THREE.Mesh(this.winGeo, new THREE.MeshStandardMaterial({ color: 0x080808, metalness: 1 }));
+                this.windows.position.set(0, 1.6, -0.2);
+                this.group.add(this.windows);
+
+                this.lights = [];
+                const lampGeo = new THREE.BoxGeometry(0.65, 0.28, 0.12);
+                const sGeo = new THREE.BoxGeometry(0.38, 0.22, 0.12);
+                const headGeo = new THREE.BoxGeometry(0.55, 0.25, 0.12);
+
+                const createPart = (geo, mat, pos, type) => {
+                    const m = new THREE.Mesh(geo, mat);
+                    m.position.copy(pos);
+                    this.group.add(m);
+                    return { mesh: m, type: type, initialPos: pos.clone(), dropped: false };
+                };
+
+                this.tailL = createPart(lampGeo, new THREE.MeshStandardMaterial({ color: 0x440000, emissive: 0xff0000, emissiveIntensity: 2.5 }), new THREE.Vector3(0.85, 0.85, -2.51), 'tail');
+                this.tailR = createPart(lampGeo, new THREE.MeshStandardMaterial({ color: 0x440000, emissive: 0xff0000, emissiveIntensity: 2.5 }), new THREE.Vector3(-0.85, 0.85, -2.51), 'tail');
+                this.sigL = createPart(sGeo, new THREE.MeshStandardMaterial({ color: 0x331100, emissive: 0xffaa00, emissiveIntensity: 0 }), new THREE.Vector3(0.65, 0.85, -2.52), 'sig');
+                this.sigR = createPart(sGeo, new THREE.MeshStandardMaterial({ color: 0x331100, emissive: 0xffaa00, emissiveIntensity: 0 }), new THREE.Vector3(-0.65, 0.85, -2.52), 'sig');
+                this.headL = createPart(headGeo, new THREE.MeshStandardMaterial({ color: 0xeeeeee, emissive: 0xffffff, emissiveIntensity: 3.0 }), new THREE.Vector3(0.65, 0.85, 2.51), 'head');
+                this.headR = createPart(headGeo, new THREE.MeshStandardMaterial({ color: 0xeeeeee, emissive: 0xffffff, emissiveIntensity: 3.0 }), new THREE.Vector3(-0.85, 0.85, 2.51), 'head');
+                this.fSigL = createPart(sGeo, new THREE.MeshStandardMaterial({ color: 0x331100, emissive: 0xffaa00, emissiveIntensity: 0 }), new THREE.Vector3(1.0, 0.85, 2.51), 'sig');
+                this.fSigR = createPart(sGeo, new THREE.MeshStandardMaterial({ color: 0x331100, emissive: 0xffaa00, emissiveIntensity: 0 }), new THREE.Vector3(-1.0, 0.85, 2.51), 'sig');
+
+                this.lights = [this.tailL, this.tailR, this.sigL, this.sigR, this.headL, this.headR, this.fSigL, this.fSigR];
+
+                const wGeo = new THREE.CylinderGeometry(0.48, 0.48, 0.55, 32);
+                const wMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a });
+                [{x:1.1, z:1.6}, {x:-1.1, z:1.6}, {x:1.1, z:-1.6}, {x:-1.1, z:-1.6}].forEach(p => {
+                    const w = new THREE.Mesh(wGeo, wMat);
+                    w.rotation.z = Math.PI / 2; w.position.set(p.x, 0.48, p.z); w.castShadow = true;
+                    this.wheels.push(w); this.group.add(w);
+                });
+
+                this.group.rotation.y = Math.PI; 
+                scene.add(this.group);
+            }
+
+            applyPhysicsImpact(relVel, impactX, impactY, impactZ, normalX, normalY, normalZ, spinFactor = 1.0) {
+                const impactPower = Math.min(Math.abs(relVel) * 5.0, 15);
+                if (impactPower < 0.2) return; 
+                this.velX += impactX * impactPower * 0.08;
+                this.velZ += impactZ * impactPower * 0.08;
+                this.velRot += (Math.random() - 0.5) * impactPower * 0.12 * spinFactor;
+                if(!this.isCrashed) {
+                    this.isCrashed = true;
+                    this.crashTime = Date.now();
+                    this.spawnDelay = 10000 + Math.random() * 10000;
+                }
+                const DEFORM_LIMIT = 1.2;
+                const deform = (geo, initVerts) => {
+                    const pos = geo.attributes.position;
+                    for (let i = 0; i < pos.count; i++) {
+                        const vx = pos.getX(i); const vy = pos.getY(i); const vz = pos.getZ(i);
+                        const dist = Math.sqrt(Math.pow(vx - impactX, 2) + Math.pow(vy - impactY, 2) + Math.pow(vz - impactZ, 2));
+                        if (dist < 2.5) {
+                            const d = (2.5 - dist) * impactPower * 0.15;
+                            const nx = vx - normalX * d + (Math.random() - 0.5) * d * 0.3;
+                            const ny = vy - normalY * d + (Math.random() - 0.5) * d * 0.3;
+                            const nz = vz - normalZ * d + (Math.random() - 0.5) * d * 0.3;
+                            const ix = initVerts[i * 3]; const iy = initVerts[i * 3 + 1]; const iz = initVerts[i * 3 + 2];
+                            pos.setX(i, Math.max(ix - DEFORM_LIMIT, Math.min(ix + DEFORM_LIMIT, nx)));
+                            pos.setY(i, Math.max(iy - DEFORM_LIMIT, Math.min(iy + DEFORM_LIMIT, ny)));
+                            pos.setZ(i, Math.max(iz - DEFORM_LIMIT, Math.min(iz + DEFORM_LIMIT, nz)));
+                        }
+                    }
+                    pos.needsUpdate = true;
+                };
+                deform(this.bodyGeo, this.initialVertices);
+                deform(this.winGeo, this.winInitialVertices);
+                let lightDropped = false;
+                this.lights.forEach(part => {
+                    if (!part.dropped) {
+                        const d = part.mesh.position.distanceTo(new THREE.Vector3(impactX, impactY, impactZ));
+                        if (d < 1.8 && impactPower > 4) {
+                            part.dropped = true;
+                            lightDropped = true;
+                            const worldPos = new THREE.Vector3();
+                            part.mesh.getWorldPosition(worldPos);
+                            scene.attach(part.mesh);
+                            fallenParts.push({
+                                mesh: part.mesh,
+                                vel: new THREE.Vector3((Math.random()-0.5)*0.5, 0.2, (Math.random()-0.5)*0.5 + (this.isPlayer ? -window.currentSpeed : 0)),
+                                rot: new THREE.Vector3(Math.random()*0.2, Math.random()*0.2, Math.random()*0.2)
+                            });
+                        }
+                    }
+                });
+                if (lightDropped && !this.humanEjected && impactPower > 7.5) {
+                    const count = 1 + Math.floor(Math.random() * 4); 
+                    const worldPos = new THREE.Vector3();
+                    this.group.getWorldPosition(worldPos);
+                    for(let k=0; k<count; k++) {
+                        const h = createSkinColorHuman();
+                        h.group.position.copy(worldPos).add(new THREE.Vector3((Math.random()-0.5)*1.5, 1.2, (Math.random()-0.5)*1.5));
+                        scene.add(h.group);
+                        const carVelZ = this.isPlayer ? -window.currentSpeed : (this.group.parent ? -1 : 0);
+                        const ejectVel = new THREE.Vector3(impactX * 0.4 + (Math.random()-0.5)*0.4, 0.3 + Math.random()*0.3, impactZ * 0.4 + carVelZ + (Math.random()-0.5)*0.4);
+                        humans.push({ mesh: h.group, body: h.body, head: h.head, limbs: h.limbs, vel: ejectVel, rot: new THREE.Vector3(Math.random()*3, Math.random()*3, Math.random()*3), isStanding: false, limbRots: h.limbs.map(() => new THREE.Vector3(Math.random()*0.5, Math.random()*0.5, Math.random()*0.5)) });
+                    }
+                    this.humanEjected = true; 
+                }
+            }
+
+            checkRailCollision() {
+                const limit = RAIL_X - 1.1;
+                if (Math.abs(this.group.position.x) > limit) {
+                    const side = Math.sign(this.group.position.x);
+                    this.group.position.x = side * limit;
+                    if (Math.abs(this.velX) > 0.01 || (this.isPlayer && window.currentSpeed > 0.5)) {
+                        const relV = this.isPlayer ? window.currentSpeed : 0.5;
+                        this.applyPhysicsImpact(relV * 0.5, side * 1.1, 0.9, 0, side, 0, 0, 0.2);
+                        this.velX = -side * 0.05;
+                        if(this.isPlayer) window.currentSpeed *= 0.96;
+                    }
+                }
+            }
+
+            reset() {
+                this.isCrashed = false; this.crashTime = 0; this.spawnDelay = 0; this.humansSpawned = false; this.humanEjected = false;
+                this.velX = 0; this.velZ = 0; this.velRot = 0; this.roll = 0;
+                this.group.rotation.set(0, Math.PI, 0);
+                const resetGeo = (geo, init) => {
+                    const p = geo.attributes.position;
+                    for (let i = 0; i < p.count; i++) { p.setXYZ(i, init[i*3], init[i*3+1], init[i*3+2]); }
+                    p.needsUpdate = true;
+                };
+                resetGeo(this.bodyGeo, this.initialVertices);
+                resetGeo(this.winGeo, this.winInitialVertices);
+                this.lights.forEach(p => { if (p.dropped) { this.group.add(p.mesh); p.dropped = false; } p.mesh.position.copy(p.initialPos); p.mesh.rotation.set(0,0,0); });
+            }
+
+            updateLights(braking, steer, time) {
+                const blink = Math.sin(time * 25) > 0;
+                const rIntensity = braking ? 90 : 4.5;
+                [this.tailL, this.tailR].forEach(p => { if(!p.dropped) p.mesh.material.emissiveIntensity = rIntensity; });
+                [this.headL, this.headR].forEach(p => { if(!p.dropped) p.mesh.material.emissiveIntensity = 3.0; });
+                const sLights = [this.sigL, this.sigR, this.fSigL, this.fSigR];
+                if (this.isCrashed) {
+                    sLights.forEach(p => { if(!p.dropped) p.mesh.material.emissiveIntensity = blink ? 150 : 0; });
+                    if(!this.humansSpawned && !this.humanEjected && Date.now() - this.crashTime > this.spawnDelay) {
+                        const count = 1 + Math.floor(Math.random() * 3);
+                        for(let k=0; k<count; k++) {
+                            const h = createSkinColorHuman();
+                            const worldPos = new THREE.Vector3();
+                            this.group.getWorldPosition(worldPos);
+                            h.group.position.set(worldPos.x + (Math.random()-0.5)*6, 0, worldPos.z + (Math.random()-0.5)*6);
+                            h.group.rotation.y = Math.random() * Math.PI * 2;
+                            scene.add(h.group);
+                            humans.push({ mesh: h.group, body: h.body, head: h.head, limbs: h.limbs, vel: new THREE.Vector3(), rot: new THREE.Vector3(), isStanding: true, limbRots: [] });
+                        }
+                        this.humansSpawned = true;
+                    }
+                } else {
+                    if(!this.sigL.dropped) this.sigL.mesh.material.emissiveIntensity = (steer < 0 && blink) ? 150 : 0;
+                    if(!this.fSigL.dropped) this.fSigL.mesh.material.emissiveIntensity = (steer < 0 && blink) ? 150 : 0;
+                    if(!this.sigR.dropped) this.sigR.mesh.material.emissiveIntensity = (steer > 0 && blink) ? 150 : 0;
+                    if(!this.fSigR.dropped) this.fSigR.mesh.material.emissiveIntensity = (steer > 0 && blink) ? 150 : 0;
+                }
+            }
+        }
+
+        // --- Tunnel State ---
+        let tunnelRemaining = 0;
+        let tunnelSequence = false;
+
+        function createSegment(z) {
+            const group = new THREE.Group();
+            
+            // Road with overlap (0.5 extra length) to fix gaps
+            const road = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_WIDTH * 1.8, SEGMENT_LENGTH + 0.5), new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 }));
+            road.rotation.x = -Math.PI / 2; road.receiveShadow = true; group.add(road);
+            
+            const lineGeo = new THREE.PlaneGeometry(0.55, 18);
+            const lineMat = new THREE.MeshStandardMaterial({ color: 0xbbbbbb });
+            for(let i = -1; i <= 1; i++) {
+                for(let j = 0; j < 3; j++) {
+                    const line = new THREE.Mesh(lineGeo, lineMat);
+                    line.rotation.x = -Math.PI / 2; line.position.set(i * LANE_WIDTH, 0.08, -SEGMENT_LENGTH/2 + j*35 + 15);
+                    group.add(line);
+                }
+            }
+            
+            const railMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.2 });
+            const lr = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.3, SEGMENT_LENGTH + 0.5), railMat);
+            lr.position.set(-RAIL_X, 0.65, 0); group.add(lr);
+            const rr = lr.clone(); rr.position.x = RAIL_X; group.add(rr);
+            
+            const fenceMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.5 });
+            const lf = new THREE.Mesh(new THREE.BoxGeometry(0.12, 4.2, SEGMENT_LENGTH + 0.5), fenceMat);
+            lf.position.set(-ROAD_WIDTH * 0.8, 2.1, 0); group.add(lf);
+            const rf = lf.clone(); rf.position.x = ROAD_WIDTH * 0.8; group.add(rf);
+            for(let i=0; i<8; i++) {
+                const tree = new THREE.Group();
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 1, 7), new THREE.MeshStandardMaterial({color: 0x3d2a1a}));
+                const leaves = new THREE.Mesh(new THREE.ConeGeometry(4.5, 11, 10), new THREE.MeshStandardMaterial({color: 0x0b2e0b}));
+                leaves.position.y = 7; tree.add(trunk, leaves);
+                tree.position.set(ROAD_WIDTH * 1.5 + Math.random()*35, 3.5, (Math.random()-0.5)*SEGMENT_LENGTH);
+                tree.castShadow = true; group.add(tree);
+                const treeL = tree.clone(); treeL.position.x *= -1.25; group.add(treeL);
+            }
+            
+            group.position.z = z; return group;
+        }
+
+        const segments = [];
+        for(let i=0; i<TOTAL_SEGMENTS; i++) {
+            const s = createSegment(-i * SEGMENT_LENGTH);
+            scene.add(s); segments.push(s);
+        }
+
+        const player = new Car(0xffffff, true);
+        const npcs = [];
+        for(let i=0; i<14; i++) {
+            const npc = new Car(new THREE.Color().setHSL(Math.random(), 0.65, 0.45));
+            npc.group.position.set(LANES_X[i % 4], 0, -80 - (i * 30));
+            npcs.push({ obj: npc, speed: 0.8 + Math.random()*0.6, targetCruiseSpeed: 0.8 + Math.random()*0.6, lane: i % 4, prevLane: i % 4, laneTimer: 0, isBraking: false, isBerserk: false });
+        }
+
+        window.currentSpeed = 0;
+        let playerX = 0, dist = 0, isFirstPerson = false;
+        const keys = {};
+        window.onkeydown = e => { 
+            keys[e.code] = true; 
+            if(e.code === 'KeyC') { isFirstPerson = !isFirstPerson; document.getElementById('viewMode').innerText = isFirstPerson ? "1st Person" : "3rd Person"; }
+        };
+        window.onkeyup = e => keys[e.code] = false;
+
+        function animate(time) {
+            requestAnimationFrame(animate);
+            const delta = time * 0.001;
+
+            if (!player.isCrashed) {
+                if (keys['KeyW']) window.currentSpeed += 0.01;
+                else if (keys['KeyS']) window.currentSpeed -= 0.035;
+                else window.currentSpeed *= 0.985;
+                window.currentSpeed = Math.max(0, Math.min(window.currentSpeed, MAX_SPEED_CAP));
+            } else { window.currentSpeed *= 0.96; if(window.currentSpeed < 0.01) window.currentSpeed = 0; }
+
+            let playerSteerDir = 0;
+            if (window.currentSpeed > 0.05 && !player.isCrashed) {
+                if (keys['KeyA'] && playerX > -20) { player.velX -= 0.006; playerSteerDir = -1; player.roll = THREE.MathUtils.lerp(player.roll, 0.08, 0.12); }
+                else if (keys['KeyD'] && playerX < 20) { player.velX += 0.006; playerSteerDir = 1; player.roll = THREE.MathUtils.lerp(player.roll, -0.08, 0.12); }
+                else { player.velX *= 0.88; player.roll = THREE.MathUtils.lerp(player.roll, 0, 0.1); }
+            } else { player.velX *= 0.8; player.roll *= 0.8; }
+
+            playerX += player.velX; player.group.position.x = playerX;
+            player.group.rotation.y += player.velRot; player.velRot *= 0.94;
+            player.bodyMesh.rotation.z = player.roll;
+            player.checkRailCollision();
+            player.updateLights(keys['KeyS'] && window.currentSpeed > 0, playerSteerDir, delta);
+
+            for (let i = fallenParts.length - 1; i >= 0; i--) {
+                const p = fallenParts[i]; p.vel.y -= 0.01; p.mesh.position.add(p.vel); p.mesh.rotation.x += p.rot.x; p.mesh.rotation.y += p.rot.y; p.mesh.position.z += window.currentSpeed;
+                if (p.mesh.position.y < 0.1) { p.mesh.position.y = 0.1; p.vel.set(0,0,0); p.rot.set(0,0,0); }
+                if (p.mesh.position.z > 50) { scene.remove(p.mesh); fallenParts.splice(i, 1); }
+            }
+
+            for (let i = humans.length - 1; i >= 0; i--) {
+                const h = humans[i];
+                if (!h.isStanding) {
+                    h.vel.y -= 0.02; h.mesh.position.add(h.vel); h.mesh.rotation.x += h.rot.x; h.mesh.rotation.z += h.rot.z;
+                    h.limbs.forEach((limb, index) => { limb.rotation.x += h.limbRots[index].x; limb.rotation.z += h.limbRots[index].z; h.limbRots[index].multiplyScalar(0.98); });
+                    const limit = RAIL_X - 0.4; if (Math.abs(h.mesh.position.x) > limit) { const side = Math.sign(h.mesh.position.x); h.mesh.position.x = side * limit; h.vel.x *= -0.5; }
+                    const groundY = 0.1;
+                    if (h.mesh.position.y < groundY) { h.mesh.position.y = groundY; h.vel.y *= -0.4; h.vel.x *= 0.8; h.vel.z *= 0.8; h.rot.multiplyScalar(0.7); if (Math.abs(h.vel.y) < 0.01 && Math.abs(h.vel.x) < 0.02) { h.vel.set(0,0,0); h.rot.set(0,0,0); h.mesh.rotation.x = Math.PI / 2; h.limbs.forEach(limb => limb.rotation.set(0,0,0)); } }
+                }
+                h.mesh.position.z += window.currentSpeed;
+                if (h.mesh.position.z > 100) { scene.remove(h.mesh); humans.splice(i, 1); }
+            }
+
+            segments.forEach(s => { 
+                s.position.z += window.currentSpeed; 
+                if(s.position.z > SEGMENT_LENGTH) {
+                    s.position.z -= WORLD_LENGTH;
+                    scene.remove(s);
+                    const idx = segments.indexOf(s);
+                    const newS = createSegment(s.position.z);
+                    segments[idx] = newS;
+                    scene.add(newS);
+                }
+            });
+
+            npcs.forEach((n, i) => {
+                let npcSteerDir = 0;
+                if (!n.obj.isCrashed) {
+                    n.obj.group.position.z += window.currentSpeed - n.speed;
+                    if (window.currentSpeed < 0.05) n.laneTimer = 0;
+
+                    if (n.isBerserk) {
+                        n.isBraking = false;
+                        if (n.laneTimer <= 0) {
+                            n.lane = Math.floor(Math.random() * 4);
+                            n.laneTimer = 50 + Math.random() * 100;
+                        }
+                    } else {
+                        let targetAhead = false;
+                        const checkAhead = (otherX, otherZ, distLimit) => {
+                            const dz = n.obj.group.position.z - otherZ;
+                            return (Math.abs(n.obj.group.position.x - otherX) < 2.6 && dz > 0.5 && dz < distLimit);
+                        };
+                        const brakeDist = (n.laneTimer > 0) ? 60 : 90;
+                        if (checkAhead(playerX, player.group.position.z, brakeDist)) targetAhead = true;
+                        npcs.forEach((other, oi) => { if(i !== oi && checkAhead(other.obj.group.position.x, other.obj.group.position.z, brakeDist)) targetAhead = true; });
+
+                        if(targetAhead) {
+                            n.isBraking = true;
+                            n.speed *= 0.945; 
+                            if(n.obj.willAvoid && n.laneTimer <= 0) { 
+                                let nextLane = (n.lane > 1) ? n.lane - 1 : n.lane + 1;
+                                let laneClear = true;
+                                const checkLaneBlocked = (otherX, otherZ) => { return (Math.abs(LANES_X[nextLane] - otherX) < 3.2 && Math.abs(n.obj.group.position.z - otherZ) < 20.0); };
+                                if(checkLaneBlocked(playerX, player.group.position.z)) laneClear = false;
+                                npcs.forEach((other, oi) => { if(i !== oi && checkLaneBlocked(other.obj.group.position.x, other.obj.group.position.z)) laneClear = false; });
+                                if(laneClear) { n.prevLane = n.lane; n.lane = nextLane; n.laneTimer = 220; }
+                            }
+                        } else {
+                            n.isBraking = false; 
+                            if(n.speed < n.targetCruiseSpeed) n.speed += 0.006;
+                        }
+                    }
+
+                    if(n.laneTimer > 0) {
+                        let collisionInTarget = false;
+                        if (!n.isBerserk) {
+                            const checkImmediate = (otherX, otherZ) => { return (Math.abs(LANES_X[n.lane] - otherX) < 2.2 && Math.abs(n.obj.group.position.z - otherZ) < 10.0); };
+                            if(checkImmediate(playerX, player.group.position.z)) collisionInTarget = true;
+                            npcs.forEach((other, oi) => { if(i !== oi && checkImmediate(other.obj.group.position.x, other.obj.group.position.z)) collisionInTarget = true; });
+                        }
+                        if(collisionInTarget) { n.lane = n.prevLane; n.speed *= 0.92; n.isBraking = true; }
+                        const diff = LANES_X[n.lane] - n.obj.group.position.x;
+                        if(Math.abs(diff) > 0.02) { npcSteerDir = Math.sign(diff); n.obj.group.position.x += npcSteerDir * (n.isBerserk ? 0.15 : 0.05); }
+                        n.laneTimer--;
+                    } else {
+                        const diff = LANES_X[n.lane] - n.obj.group.position.x;
+                        if(Math.abs(diff) > 0.02) n.obj.group.position.x += Math.sign(diff) * 0.04;
+                    }
+                } else {
+                    n.obj.group.position.z += window.currentSpeed + n.obj.velZ;
+                    n.obj.group.position.x += n.obj.velX;
+                    n.obj.group.rotation.y += n.obj.velRot;
+                    n.obj.velX *= 0.9; n.obj.velZ *= 0.9; n.obj.velRot *= 0.9;
+                    n.obj.checkRailCollision();
+                }
+
+                const dZ = n.obj.group.position.z - player.group.position.z;
+                const dX = n.obj.group.position.x - playerX;
+                if(Math.abs(dZ) < 4.8 && Math.abs(dX) < 2.2) {
+                    const relV = n.obj.isCrashed ? window.currentSpeed : (window.currentSpeed - n.speed);
+                    const normalZ = Math.sign(dZ); const normalX = Math.sign(dX);
+                    n.obj.applyPhysicsImpact(relV, dX * 1.5, 0.9, normalZ * 2.5, normalX, 0, normalZ);
+                    player.applyPhysicsImpact(-relV, -dX * 1.5, 0.9, -normalZ * 2.5, -normalX, 0, -normalZ);
+                    window.currentSpeed *= 0.3;
+                }
+
+                npcs.forEach((other, oi) => {
+                    if(i === oi) return;
+                    const dz = n.obj.group.position.z - other.obj.group.position.z;
+                    const dx = n.obj.group.position.x - other.obj.group.position.x;
+                    if(Math.abs(dz) < 4.8 && Math.abs(dx) < 2.2) {
+                        const relV = (n.speed - other.speed) * 4.0;
+                        const normalz = Math.sign(dz); const normalx = Math.sign(dx);
+                        n.obj.applyPhysicsImpact(relV, dx * 1.5, 0.9, normalz * 2.5, normalx, 0, normalz);
+                        other.obj.applyPhysicsImpact(-relV, -dx * 1.5, 0.9, -normalz * 2.5, -normalx, 0, -normalz);
+                    }
+                });
+
+                if(n.obj.group.position.z > 120 || n.obj.group.position.z < -450) { 
+                    n.obj.reset(); 
+                    const isComingFromBehind = Math.random() < 0.4;
+                    n.obj.group.position.z = isComingFromBehind ? 110 : -440; 
+                    n.lane = Math.floor(Math.random()*4);
+                    n.obj.group.position.x = LANES_X[n.lane];
+                    n.prevLane = n.lane;
+                    n.isBerserk = Math.random() < 0.15;
+                    if (n.isBerserk) {
+                        n.targetCruiseSpeed = 1.8 + Math.random() * 0.5;
+                        n.obj.bodyMat.color.set(0xff0000); 
+                    } else if(Math.random() < 0.05) {
+                        n.speed = 0.1; n.targetCruiseSpeed = 0.1; n.obj.isCrashed = true; n.obj.crashTime = Date.now();
+                        n.obj.bodyMat.color.setHSL(Math.random(), 0.65, 0.45);
+                    } else {
+                        n.targetCruiseSpeed = 0.8 + Math.random()*0.6;
+                        n.obj.bodyMat.color.setHSL(Math.random(), 0.65, 0.45);
+                    }
+                    n.speed = n.targetCruiseSpeed;
+                }
+                n.obj.updateLights(n.isBraking, npcSteerDir, delta);
+            });
+
+            dist += window.currentSpeed * 0.28;
+            document.getElementById('speed').innerText = Math.floor(window.currentSpeed * 120);
+            document.getElementById('dist').innerText = Math.floor(dist);
+
+            if(isFirstPerson) { camera.position.set(playerX, 1.72, -0.35); camera.lookAt(playerX, 1.5, -60); }
+            else { camera.position.set(playerX * 0.45, 5.2, 14.5); camera.lookAt(playerX, 1.2, -22); }
+            renderer.render(scene, camera);
+        }
+        animate(0);
+    </script>
+</body>
+</html>
