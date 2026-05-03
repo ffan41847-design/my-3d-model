@@ -2,12 +2,13 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Ultimate Highway Simulator - Random Tunnels</title>
+    <title>Ultimate Highway Simulator - Toll Gate Edition</title>
     <style>
         body { margin: 0; overflow: hidden; background: #87CEEB; font-family: 'Segoe UI', sans-serif; }
         #gui { position: absolute; top: 30px; left: 30px; color: white; text-shadow: 2px 2px 5px rgba(0,0,0,0.8); pointer-events: none; z-index: 10; }
         .stat { font-size: 32px; font-weight: 900; font-style: italic; margin-bottom: 5px; border-left: 5px solid #ffcc00; padding-left: 15px; }
         #instructions { position: absolute; bottom: 30px; width: 100%; text-align: center; color: white; font-size: 18px; text-shadow: 1px 1px 3px black; background: rgba(0,0,0,0.4); padding: 10px 0; z-index: 10; }
+        #toll-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ffcc00; font-size: 48px; font-weight: bold; text-shadow: 3px 3px 10px black; display: none; z-index: 20; }
     </style>
 </head>
 <body>
@@ -17,7 +18,8 @@
         <div class="stat">DIST: <span id="dist">0</span> m</div>
         <div class="stat">VIEW: <span id="viewMode">3rd Person</span></div>
     </div>
-    <div id="instructions">W: 加速 / S: ブレーキ / A,D: ステア / C: 視点切替 / スムーズな車線変更 & 暴走車注意</div>
+    <div id="toll-msg">TOLL GATE - SLOW DOWN</div>
+    <div id="instructions">W: 加速 / S: ブレーキ / A,D: ステア / C: 視点切替 / 料金所では一時停止</div>
 
     <script type="module">
         import * as THREE from 'https://unpkg.com/three@0.157.0/build/three.module.js';
@@ -31,6 +33,7 @@
         const LANES_X = [-9, -3, 3, 9];
         const RAIL_X = ROAD_WIDTH * 0.65;
         const MAX_SPEED_CAP = 1.8;
+        const TOLL_INTERVAL = 1500; // 料金所の出現間隔（m）
 
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x82CAFF);
@@ -53,6 +56,7 @@
 
         const fallenParts = [];
         const humans = [];
+        let tollGates = [];
 
         function createSignTexture() {
             const canvas = document.createElement('canvas');
@@ -67,13 +71,65 @@
             ctx.fillStyle = 'black';
             ctx.font = 'bold 60px "Hiragino Sans", "Meiryo", sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('トンネル注意', 256, 100);
+            ctx.fillText('料金所注意', 256, 100);
             ctx.font = 'bold 45px "Hiragino Sans", "Meiryo", sans-serif';
             ctx.fillText('速度落とせ', 256, 180);
             const tex = new THREE.CanvasTexture(canvas);
             return tex;
         }
         const signTex = createSignTexture();
+
+        // --- Toll Gate Class ---
+        class TollGate {
+            constructor(z) {
+                this.group = new THREE.Group();
+                this.isOpen = false;
+                this.z = z;
+                
+                // 屋根
+                const roof = new THREE.Mesh(new THREE.BoxGeometry(ROAD_WIDTH * 1.2, 2, 10), new THREE.MeshStandardMaterial({color: 0x333333}));
+                roof.position.y = 8;
+                this.group.add(roof);
+
+                // 支柱
+                const pillarGeo = new THREE.BoxGeometry(1, 8, 1);
+                const p1 = new THREE.Mesh(pillarGeo, new THREE.MeshStandardMaterial({color: 0x888888}));
+                p1.position.set(-RAIL_X, 4, 0);
+                const p2 = p1.clone();
+                p2.position.x = RAIL_X;
+                this.group.add(p1, p2);
+
+                // バー (各車線)
+                this.bars = [];
+                LANES_X.forEach(x => {
+                    const barGroup = new THREE.Group();
+                    const bar = new THREE.Mesh(new THREE.BoxGeometry(LANE_WIDTH, 0.3, 0.3), new THREE.MeshStandardMaterial({color: 0xff0000}));
+                    bar.position.x = 0;
+                    barGroup.add(bar);
+                    barGroup.position.set(x, 1.2, 0);
+                    this.group.add(barGroup);
+                    this.bars.push(barGroup);
+                });
+
+                this.group.position.z = z;
+                scene.add(this.group);
+            }
+
+            update(playerZ, speed) {
+                const distToToll = Math.abs(this.group.position.z - playerZ);
+                
+                // プレイヤーが近づき、かつ低速なら開門
+                if (distToToll < 15 && speed < 0.2) {
+                    this.isOpen = true;
+                }
+
+                if (this.isOpen) {
+                    this.bars.forEach(b => {
+                        b.rotation.z = THREE.MathUtils.lerp(b.rotation.z, Math.PI/2, 0.1);
+                    });
+                }
+            }
+        }
 
         function createSkinColorHuman() {
             const group = new THREE.Group();
@@ -286,14 +342,9 @@
             }
         }
 
-        // --- Tunnel State ---
-        let tunnelRemaining = 0;
-        let tunnelSequence = false;
-
         function createSegment(z) {
             const group = new THREE.Group();
             
-            // Road with overlap (0.5 extra length) to fix gaps
             const road = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_WIDTH * 1.8, SEGMENT_LENGTH + 0.5), new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 }));
             road.rotation.x = -Math.PI / 2; road.receiveShadow = true; group.add(road);
             
@@ -345,6 +396,7 @@
 
         window.currentSpeed = 0;
         let playerX = 0, dist = 0, isFirstPerson = false;
+        let lastTollDist = 0;
         const keys = {};
         window.onkeydown = e => { 
             keys[e.code] = true; 
@@ -375,6 +427,34 @@
             player.bodyMesh.rotation.z = player.roll;
             player.checkRailCollision();
             player.updateLights(keys['KeyS'] && window.currentSpeed > 0, playerSteerDir, delta);
+
+            // 料金所の生成
+            if (dist - lastTollDist > TOLL_INTERVAL) {
+                tollGates.push(new TollGate(-500));
+                lastTollDist = dist;
+            }
+
+            // 料金所の更新と衝突
+            const tollUI = document.getElementById('toll-msg');
+            tollUI.style.display = "none";
+            for (let i = tollGates.length - 1; i >= 0; i--) {
+                const tg = tollGates[i];
+                tg.group.position.z += window.currentSpeed;
+                tg.update(player.group.position.z, window.currentSpeed);
+
+                const dZ = tg.group.position.z - player.group.position.z;
+                if (dZ < 50 && dZ > 0) tollUI.style.display = "block";
+
+                if (!tg.isOpen && Math.abs(dZ) < 2.5) {
+                    player.applyPhysicsImpact(window.currentSpeed, 0, 0.9, -2.5, 0, 0, -1);
+                    window.currentSpeed = 0;
+                }
+
+                if (tg.group.position.z > 100) {
+                    scene.remove(tg.group);
+                    tollGates.splice(i, 1);
+                }
+            }
 
             for (let i = fallenParts.length - 1; i >= 0; i--) {
                 const p = fallenParts[i]; p.vel.y -= 0.01; p.mesh.position.add(p.vel); p.mesh.rotation.x += p.rot.x; p.mesh.rotation.y += p.rot.y; p.mesh.position.z += window.currentSpeed;
@@ -411,6 +491,13 @@
                 let npcSteerDir = 0;
                 if (!n.obj.isCrashed) {
                     n.obj.group.position.z += window.currentSpeed - n.speed;
+                    
+                    // NPCも料金所で減速する
+                    tollGates.forEach(tg => {
+                        const dzT = tg.group.position.z - n.obj.group.position.z;
+                        if (dzT > 0 && dzT < 60 && !tg.isOpen) { n.isBraking = true; n.speed *= 0.92; }
+                    });
+
                     if (window.currentSpeed < 0.05) n.laneTimer = 0;
 
                     if (n.isBerserk) {
@@ -441,7 +528,6 @@
                                 if(laneClear) { n.prevLane = n.lane; n.lane = nextLane; n.laneTimer = 220; }
                             }
                         } else {
-                            n.isBraking = false; 
                             if(n.speed < n.targetCruiseSpeed) n.speed += 0.006;
                         }
                     }
